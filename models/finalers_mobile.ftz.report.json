@@ -1,0 +1,195 @@
+{
+  "generated_at": "2026-10-21 23:52:38",
+  "duration_seconds": 3.62,
+  "environment": {
+    "python": "3.9.6",
+    "platform": "macOS-27.0.1-arm64-arm-64bit",
+    "fasttext": "unknown",
+    "numpy": "1.26.4"
+  },
+  "arguments": {
+    "input": "data/labeling",
+    "test": "data/probe",
+    "valid": null,
+    "valid_ratio": 0.2,
+    "seed": 42,
+    "split_by_label": null,
+    "model": null,
+    "report": null,
+    "no_report": false,
+    "work_dir": null,
+    "keep_work_dir": false,
+    "epoch": 25,
+    "lr": 0.5,
+    "dim": 20,
+    "ws": 5,
+    "word_ngrams": 2,
+    "min_count": 1,
+    "min_count_label": 1,
+    "min_n": 1,
+    "max_n": 3,
+    "loss": "softmax",
+    "neg": 5,
+    "bucket": 50000,
+    "lr_update_rate": 100,
+    "thread": 12,
+    "quantize": true,
+    "quantize_dsub": 2,
+    "quantize_qnorm": false,
+    "quantize_retrain": false,
+    "autotune": false,
+    "autotune_duration": 60,
+    "autotune_metric": "f1",
+    "autotune_predictions": 1,
+    "autotune_max_bucket": 50000,
+    "k": 1,
+    "threshold": 0.0,
+    "max_failures": 20,
+    "metrics": false,
+    "predict": null,
+    "predict_file": null,
+    "interactive": false,
+    "dry_run": false,
+    "check_env": false,
+    "quiet": false,
+    "verbose": 2,
+    "output": "models/finalers_mobile.ftz",
+    "output_given": true,
+    "auto_quantize_from_extension": false
+  },
+  "data": {
+    "input": "data/labeling",
+    "input_files": [
+      {
+        "path": "data/labeling/accounting_data.txt",
+        "samples": 241
+      },
+      {
+        "path": "data/labeling/unknown_data.txt",
+        "samples": 390
+      }
+    ],
+    "input_stats": {
+      "source": "data/labeling",
+      "samples": 631,
+      "labels": {
+        "unknown": 390,
+        "accounting": 241
+      },
+      "label_count": 2,
+      "multi_label_samples": 0,
+      "no_text_samples": 0
+    },
+    "test": "data/probe",
+    "test_stats": {
+      "source": "data/probe",
+      "samples": 60,
+      "labels": {
+        "unknown": 36,
+        "accounting": 24
+      },
+      "label_count": 2,
+      "multi_label_samples": 0,
+      "no_text_samples": 0
+    },
+    "split": {
+      "train_samples": 505,
+      "valid_samples": 126,
+      "valid_ratio": 0.2,
+      "seed": 42,
+      "files": [
+        "/var/folders/bs/s8p7q78916z4576k_3d0w_240000gn/T/fasttext_split_9xxa70jr/train.txt",
+        "/var/folders/bs/s8p7q78916z4576k_3d0w_240000gn/T/fasttext_split_9xxa70jr/valid.txt"
+      ]
+    }
+  },
+  "model": {
+    "path": "models/finalers_mobile.ftz",
+    "size_mb": 0.5184,
+    "training_seconds": 0.114,
+    "params": {
+      "autotune": false,
+      "input": "/var/folders/bs/s8p7q78916z4576k_3d0w_240000gn/T/fasttext_split_9xxa70jr/train.txt",
+      "epoch": 25,
+      "lr": 0.5,
+      "dim": 20,
+      "ws": 5,
+      "wordNgrams": 2,
+      "minCount": 1,
+      "minCountLabel": 1,
+      "minn": 1,
+      "maxn": 3,
+      "loss": "softmax",
+      "neg": 5,
+      "bucket": 50000,
+      "lrUpdateRate": 100,
+      "thread": 12,
+      "seed": 42,
+      "verbose": 2
+    },
+    "summary": {
+      "dim": 20,
+      "epoch": 25,
+      "lr": 0.5,
+      "ws": 5,
+      "wordNgrams": 2,
+      "minCount": 1,
+      "minn": 1,
+      "maxn": 3,
+      "bucket": 50000,
+      "neg": 5,
+      "thread": 12,
+      "loss": "softmax",
+      "config_source": "training",
+      "vocab_size": 506,
+      "labels": [
+        "__label__unknown",
+        "__label__accounting"
+      ]
+    },
+    "quantization": {
+      "dsub": 2,
+      "cutoff": 0,
+      "qnorm": false,
+      "retrain": false,
+      "seconds": 3.373,
+      "estimated_size_before_mb": 3.8533
+    },
+    "verification": {
+      "reloaded": true,
+      "is_quantized": true,
+      "vocab_size": 506,
+      "vocab_size_same": true,
+      "labels_same": true
+    }
+  },
+  "evaluation": {
+    "samples": 60,
+    "k": 1,
+    "threshold": 0.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "per_label": {
+      "__label__accounting": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "__label__unknown": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "judged_samples": 60,
+    "correct": 60,
+    "failed": 0,
+    "success_rate": 1.0,
+    "failure_rate": 0.0,
+    "failures": [],
+    "failures_complete": true,
+    "path": "data/probe",
+    "is_test_set": true
+  }
+}

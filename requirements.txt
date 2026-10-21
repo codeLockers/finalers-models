@@ -1,0 +1,14 @@
+# fastText 训练脚本依赖
+#
+# 一、官方版(与本文档示例一致)
+#   fasttext==0.9.3 在 macOS 上的 PyPI wheel 存在两个已知问题, 详见 README.md:
+#     1) 二进制写死了构建机上的 libc++ 路径, 导入时报
+#        "Library not loaded: @rpath/libc++.1.dylib"
+#     2) predict() 内部使用了 np.array(probs, copy=False), 在 NumPy 2.x 下抛 ValueError
+#   因此这里显式约束 numpy < 2; 若已经装了 fasttext==0.9.3 且导入失败,
+#   可用 `pip install --user fasttext-wheel`(fork, 二进制更完整) 替代。
+fasttext==0.9.3
+numpy<2
+
+# 二、备选方案(注释掉上面两行, 改用下面这行)
+# fasttext-wheel==0.9.2
