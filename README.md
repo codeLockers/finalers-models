@@ -76,10 +76,10 @@ __label__unknown 明天上午十点提醒我开会
 
 | 文件 | 标签 | 含义 | 条数 |
 | --- | --- | --- | --- |
-| `accounting_data.txt` | `__label__accounting` | 记账（记录/陈述一笔**已发生**的收支） | 241 |
-| `unknown_data.txt` | `__label__unknown` | 未知（其余全部兜底到这一类） | 390 |
+| `accounting_data.txt` | `__label__accounting` | 记账（记录/陈述一笔**已发生**的收支） | 606 |
+| `unknown_data.txt` | `__label__unknown` | 未知（其余全部兜底到这一类） | 835 |
 
-两个文件合计 **631 条、2 个标签**，每行都保留 `__label__` 前缀（拆分文件本身就是合法的 fastText
+两个文件合计 **1441 条、2 个标签**，每行都保留 `__label__` 前缀（拆分文件本身就是合法的 fastText
 数据），也可以只取其中一个文件训练单类别模型。标签名刻意用英文，避免中文标签在代码 / JSON / 日志里
 出现编码与转义问题。数据是**按「说法覆盖维度」铺出来的**（不是按条数堆），判定规则、边界约定、
 覆盖矩阵和实测指标都写在 [`data/LABELING.md`](data/LABELING.md)。
@@ -97,7 +97,7 @@ python3 fasttext_training_script.py -i /path/to/full.txt --split-by-label data/l
 但会被 `-i` 一起读入训练，所以发现不是本次生成的历史文件时脚本会**直接报错中止（不写任何文件）**，
 按提示删掉或移走这些残留再重跑即可。
 
-另外带一份**独立留出测试集** `data/probe/`（60 条 = 24 / 36），同样按标签拆成
+另外带一份**独立留出测试集** `data/probe/`（417 条 = 138 / 279），同样按标签拆成
 `accounting_data.txt` / `unknown_data.txt`，刻意与训练集**零重叠**，用来量「换说法的泛化」，
 而不是在调参数据上自评：
 
@@ -117,7 +117,7 @@ python3 fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin
 >     data/labeling/*_data.txt
 > ```
 >
-> 注意正负样本约 1:1.6 不平衡（v1 是 1:4），评估时重点看 `accounting` 的 P/R，不要只看整体准确率
+> 注意正负样本约 1:1.4 不平衡（v1 是 1:4），评估时重点看 `accounting` 的 P/R，不要只看整体准确率
 > （全判 unknown 也有 ~0.62）。
 
 > **常见疑问：没命中的不就是 unknown 吗？为什么还要给 unknown 训练数据？**
@@ -226,7 +226,8 @@ bucket 只决定**哈希碰撞概率**，而碰撞取决于「语料里出现过
 | 1 / 4 | 10089 | 20% |
 | 1 / 6 | 15988 | 32% |
 
-本示例数据的完整扫描（631 条训练；留出集 60 条独立测试；另做 5 个 seed 的 8:2 切分取验证集均值）：
+下表是 v2（631 条训练；留出集 60 条）的历史扫描，用来比较 dim/bucket 的相对趋势；当前数据已扩到
+1441 条训练 / 417 条留出，生产配置复测见下文「v3（1441 条）实测」：
 
 | dim / bucket | 体积 | 留出集 P@1 | 8:2 5-seed 均值 | 单 seed 范围 |
 | --- | --- | --- | --- | --- |
@@ -259,6 +260,9 @@ bucket 的下限（固定 dim=20）：
 （0.9555 / 0.9524），但都比 `maxn=3` 的 0.9683 差 —— 想省体积不要动 `--min-n/--max-n`，先把 `1/3` 定住。
 
 #### 再进一步：乘积量化 `--quantize`（约 1/8，实测无损）
+
+> 下面两张压缩表基于 v2（60 条留出集）；当前 1441 条训练 / 417 条留出集的生产配置复测见
+> 下文「v3（1441 条）实测」，`dim 20 / bucket 50000 / quantize` 体积约 **0.55 MB**。
 
 脚本新增 `--quantize`：把每个 subvector 压成 1 字节（乘积量化），体积公式（实测吻合）
 `(词表 + bucket) × (nsubq + 1) 字节 + 码本`，其中 `nsubq` 是 fastText 实际切出的 subvector 段数
@@ -311,7 +315,7 @@ python3 fasttext_training_script.py -m models/intent.bin --quantize -t data/prob
 python3 fasttext_training_script.py -m models/intent.bin -o models/intent.ftz
 ```
 
-实测（源模型 `models/intent.bin` = dim 100 / bucket 200000 / 76.50 MB，评估集 `data/probe`）：
+实测（v2 历史：源模型 `models/intent.bin` = dim 100 / bucket 200000 / 76.50 MB，评估集 `data/probe`）：
 
 | 指标 | 结果 |
 | --- | --- |
@@ -346,7 +350,7 @@ python3 fasttext_training_script.py -m models/intent.bin -o models/intent.ftz
 * 报告走独立分支 `mode: "quantize_only"`，比训练报告多了 `source_model`、`compression`、
   `verification`（含 `prediction_agreement` 与前后指标）。
 
-#### 手机端怎么选（下面三档在留出集 60 条上都是 P@1=1.0000）
+#### 手机端怎么选（下面三档是 v2 在留出集 60 条上的历史结果；当前 417 条见下文「v3（1441 条）实测」）
 
 | 目标 | 命令 | 体积 |
 | --- | --- | --- |
@@ -430,7 +434,7 @@ python3 fasttext_training_script.py -m models/intent.bin -o models/intent.ftz
 原因：中文不分词时整句只是一个 token，判别信息全在字符 n-gram 里；`--min-n 3` 会丢掉「花」「元」
 「块」这类**单字/双字线索**，正类样本又少，模型容易退化成「全判 unknown」。所以脚本默认改成了
 `--min-n 1 --max-n 3`（要恢复旧行为就显式传 `--min-n 3 --max-n 6`）。
-注意 v1 的 60 条数据里 `accounting` 只有 12 条，任何指标都波动很大（现已扩到 241 条，见下文「数据量」）。
+注意 v1 的 60 条数据里 `accounting` 只有 12 条，任何指标都波动很大（现已扩到 606 条，见下文「数据量」）。
 
 #### 数据量：每类要多少条（实测）
 
@@ -458,14 +462,29 @@ python3 fasttext_training_script.py -m models/intent.bin -o models/intent.ftz
 | 「含元/块 = 记账」单特征捷径的准确率 | 0.807（v1 约 0.98，捷径已被大幅削弱） |
 | 训练集内「含金额单位但非记账」的硬负例 | 34 条（v1 只有 1 条） |
 
-但别把「留出集满分」当成万事大吉：8:2 的验证集只有约 126 条，单轮指标会在 **0.96~0.98** 之间抖动
-（所以要多种子看范围）；残余错误集中在一个家族——**「费用名 + 中文数字」且没有强动词的汇总式陈述**
-（「这个月停车费一共三百二」「交了这个月宽带费九十」），模型概率常年停在 0.5~0.7，需要规则或阈值兜底。
+**v3（1441 条，当前数据）实测**——本轮针对 7 个线上 badcase 补了「充值 / 转账 / 收款码 / 补录 / 物业费 /
+折扣」的成对边界样本（判定规则见 [`data/LABELING.md`](data/LABELING.md) §2）：
+
+| 口径 | 结果 |
+| --- | --- |
+| 独立留出集 417 条（`-t data/probe`，与训练集 0 重叠） | P@1 = R@1 = F1 = **1.0000**（417/417） |
+| 本轮新写同族改写 210 条（92 + 118，临时回归集，未入仓；已过滤与训练集 / 旧 probe 的完全重复） | **210/210** 正确（参与过边界迭代，仅作回归参考） |
+| 8:2 切分（seed 1 / 7 / 42 / 2024，thread 1） | P@1 = 0.9861 / 0.9722 / 0.9861 / 0.9618（均值 0.9766） |
+| 单特征捷径「含元/块 = 记账」 | 训练集 0.7988 / 独立留出集 0.8993（模型 1.0000） |
+| 捷径会判错的子集 | probe 中「unknown 且含元/块」16/16；probe 中「accounting 且不含元/块」26/26 |
+| 训练集内「含金额单位但非记账」的硬负例 | 103 条（v2 34 条） |
+| 数据体检：重复 / 冲突 / 训练-留出完全重叠 | 0 / 0 / 0 |
+
+但别把「留出集满分」当成万事大吉：8:2 的验证集为 288 条，单轮指标仍会在 **0.96~0.99** 之间抖动
+（所以要多种子看范围）；残余错误集中在两类——**「费用名 + 中文数字」且没有强动词的汇总式陈述**
+（「这个月停车费一共三百二」「交了这个月宽带费九十」），以及**只差一个「了/已经」或一个宾语的最小对**
+（「给朋友转账了三千元」vs「给朋友转账三千元」），模型概率常在 0.5~0.7，需要规则或阈值兜底。
+最终模型在 1441 条训练集上仍有 5 条这类自相矛盾，明细见 [`data/LABELING.md`](data/LABELING.md) §5。
 
 结论与做法：
 
 * 目标规模：正样本 **100~200 条**，unknown 类 **300~500 条**（它要覆盖「其余全部」），
-  并留一份独立测试集（别用同一份数据既调参又报指标）。✅ 示例数据已按此扩到 **241 / 390 条**，
+  并留一份独立测试集（别用同一份数据既调参又报指标）。✅ 示例数据已按此扩到 **606 / 835 条**，
   并配了独立留出集 `data/probe`。
 * 扩数据按**说法维度**补，不是按条数补：谁花的（我/孩子/公司）、金额写法（`30` / `30元` /
   `32.5` / `1,200` / `三百`）、动词（花/买/交/付/充/订/到账/支出）、口语 vs 书面、是否带时间词。
@@ -480,10 +499,10 @@ python3 fasttext_training_script.py -m models/intent.bin -o models/intent.ftz
 
 * `--thread > 1` 时 fastText 是**异步 SGD**：即使固定 `--seed`，多次训练指标也会有波动（线程越多
   越明显，模型参数本身也不一致）。要完全可复现请用 `--thread 1`。
-* 正负样本 1:1.6 不平衡时不要只看整体准确率（全判 `unknown` 就有 ~0.62），重点看 `accounting` 的
+* 正负样本 1:1.4 不平衡时不要只看整体准确率（全判 `unknown` 就有 ~0.62），重点看 `accounting` 的
   P/R（加 `--metrics` 就能看到脚本打印的「每标签指标」）。
-* 指标波动大时优先补数据（每个标签几百条起步）；示例数据已扩到 631 条，脚本的「样本数过少」提醒
-  不会再触发，但小验证集（~126 条）带来的 ±2% 抖动依然存在，请用 `-t` 留出集评估。
+* 指标波动大时优先补数据（每个标签几百条起步）；示例数据已扩到 1441 条，脚本的「样本数过少」提醒
+  不会再触发，但验证集（~288 条）带来的 ±2% 抖动依然存在，请用 `-t` 留出集评估。
 
 ### 用留出集自评（推荐）
 
@@ -491,7 +510,7 @@ python3 fasttext_training_script.py -m models/intent.bin -o models/intent.ftz
 python3 fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin
 ```
 
-这条命令用**全部 631 条**训练、在**从未参与训练的 60 条**上评估，是最接近上线口径的指标；
+这条命令用**全部 1441 条**训练、在**从未参与训练的 417 条**上评估，是最接近上线口径的指标；
 `--report` 里也会把 `data.test` / `data.test_stats` 一起写进 JSON。
 
 ## 5. 输出说明
@@ -535,7 +554,7 @@ python3 fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin
   （`size_before_mb/size_after_mb/ratio/saved_mb`）与 `verification`
   （`is_quantized/vocab_size_same/labels_same/prediction_agreement`，有评估集时还有前后指标与 `precision_delta`）。
 * 评估集给**目录**（如 `data/probe`）时，脚本会先把目录内 `*.txt` 按文件名排序合并成临时文件再交给
-  fastText（日志里有一行 `合并评估集 : data/probe (60 条, 2 个文件)`），结束后自动清理。
+  fastText（日志里有一行 `合并评估集 : data/probe (417 条, 2 个文件)`），结束后自动清理。
 * **多标签数据**会自动检测并用 `loss=ova` 提示；单标签数据在 `--metrics` 里会说明 `P@1 即 accuracy`。
 * 切分时若某个标签样本太少，会打印实际切分比例与目标比例的偏差提醒。
 * autotune 时若验证集同时用于选超参数，会提示指标偏乐观，建议另给 `--test`。
@@ -546,12 +565,12 @@ python3 fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin
 fasttext_training_script.py        主脚本
 requirements.txt                   依赖
 README.md                          本文件
-data/labeling/accounting_data.txt  示例数据-记账类（`__label__accounting` 241 条）
-data/labeling/unknown_data.txt     示例数据-未知类（`__label__unknown` 390 条）
-data/probe/accounting_data.txt     独立留出测试集-记账类（24 条，与训练集零重叠）
-data/probe/unknown_data.txt        独立留出测试集-未知类（36 条，与训练集零重叠；`-t data/probe` 合并评估）
+data/labeling/accounting_data.txt  示例数据-记账类（`__label__accounting` 606 条）
+data/labeling/unknown_data.txt     示例数据-未知类（`__label__unknown` 835 条）
+data/probe/accounting_data.txt     独立留出测试集-记账类（138 条，与训练集零重叠）
+data/probe/unknown_data.txt        独立留出测试集-未知类（279 条，与训练集零重叠；`-t data/probe` 合并评估）
 data/LABELING.md                   标注规范：判定顺序、边界约定、覆盖维度、实测指标
-models/intent.bin(.report.json)    默认命令的产物（.gitignore 已忽略 models/）
-models/intent_mobile.ftz(.report.json)  端侧小模型（--dim 20 --bucket 50000 --quantize，0.52 MB，内容已是量化模型）
-models/intent.ftz(.report.json)    端侧导出示例：由 models/intent.bin 量化而来（76.50 MB → 9.68 MB）
+models/finalers.bin(.report.json)  默认命令的产物（模型产物默认不进 git；当前 models/ 未跟踪）
+models/finalers_mobile.ftz(.report.json)  当前端侧小模型（--dim 20 --bucket 50000 --quantize，0.55 MB，内容已是量化模型）
+models/intent.ftz(.report.json)    端侧导出示例：由 dim 100 / bucket 200000 的 .bin 量化而来（76.50 MB → 9.68 MB）
 ```

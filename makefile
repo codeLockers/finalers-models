@@ -43,8 +43,10 @@ THREAD    ?= 4
 DURATION  ?= 60
 TEXT      ?= 午饭花了30块
 # 端侧小模型的训练超参（mobile-train 用；bucket 不要低于 50000，否则易 NaN）
+# MOBILE_THREAD=1：牺牲一点训练速度，换取多次构建完全一致的端侧模型（fastText 多线程是异步 SGD）
 MOBILE_DIM    ?= 20
 MOBILE_BUCKET ?= 50000
+MOBILE_THREAD ?= 1
 
 # 「一条完整命令」也可以直接定义成变量；recipe 里写 $(TRAIN) 就是展开整行
 PY       := $(PYTHON) $(SCRIPT)
@@ -53,7 +55,7 @@ TUNE      = $(PY) -i $(DATA) -o $(MODEL_DIR)/tuned.bin --autotune --autotune-dur
 QUANTIZE  = $(PY) -m $(MODEL) --quantize -o $(MOBILE) -t $(HOLDOUT)
 # 一步到位：直接用原始数据训练小模型并量化，产物同样是 $(MOBILE)
 MOBILE_TRAIN = $(PY) -i $(DATA) -o $(MOBILE) -t $(HOLDOUT) \
-               --dim $(MOBILE_DIM) --bucket $(MOBILE_BUCKET) --quantize
+               --dim $(MOBILE_DIM) --bucket $(MOBILE_BUCKET) --quantize --thread $(MOBILE_THREAD)
 
 # DATA/HOLDOUT 是目录时，依赖必须落到具体文件上：只依赖目录的话，加减文件才会更新目录 mtime，
 # 原地改写 data/labeling/*.txt 不会触发重训（make 只比较 mtime）。
@@ -147,9 +149,9 @@ $(MOBILE): $(MODEL) $(HOLDOUT_FILES)
 	@mkdir -p $(@D)
 	$(QUANTIZE)
 
-mobile-train: ## 从原始数据一步训练+量化端侧模型（dim=20, bucket=50000）
+mobile-train: ## 从原始数据一步训练+量化端侧模型（dim=20, bucket=50000, thread=1）
 	@mkdir -p $(MODEL_DIR)
-	@echo ">> 训练+量化 $(MOBILE)  (dim=$(MOBILE_DIM), bucket=$(MOBILE_BUCKET))"
+	@echo ">> 训练+量化 $(MOBILE)  (dim=$(MOBILE_DIM), bucket=$(MOBILE_BUCKET), thread=$(MOBILE_THREAD))"
 	$(MOBILE_TRAIN)
 
 # -----------------------------------------------------------------------------
