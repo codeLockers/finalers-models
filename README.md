@@ -76,10 +76,10 @@ __label__unknown 明天上午十点提醒我开会
 
 | 文件 | 标签 | 含义 | 条数 |
 | --- | --- | --- | --- |
-| `accounting_data.txt` | `__label__accounting` | 记录/陈述已发生的收支，或查询/管理资产与负债账户 | 722 |
-| `unknown_data.txt` | `__label__unknown` | 未知（其余全部兜底到这一类） | 848 |
+| `accounting_data.txt` | `__label__accounting` | 记录/陈述已发生的收支，或查询/管理资产与负债账户 | 859 |
+| `unknown_data.txt` | `__label__unknown` | 未知（其余全部兜底到这一类） | 983 |
 
-两个文件合计 **1570 条、2 个标签**，每行都保留 `__label__` 前缀（拆分文件本身就是合法的 fastText
+两个文件合计 **1842 条、2 个标签**，每行都保留 `__label__` 前缀（拆分文件本身就是合法的 fastText
 数据），也可以只取其中一个文件训练单类别模型。标签名刻意用英文，避免中文标签在代码 / JSON / 日志里
 出现编码与转义问题。数据是**按「说法覆盖维度」铺出来的**（不是按条数堆），判定规则、边界约定、
 覆盖矩阵和实测指标都写在 [`data/LABELING.md`](data/LABELING.md)。
@@ -111,7 +111,10 @@ python3 fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin
 
 2026-10-27 恢复资产账户相关样本：微信/支付宝/银行卡余额查询、账户创建、余额/额度修改、账户列表、
 改名和归档等均属于 `accounting`。同时修正了旧数据中 21 条余额/额度/账户查询负例。
-本次**仅更新数据与说明，未触发模型训练**；下文实测保留 v2、v3 的历史结果，当前资产账户意图尚未重新评估。
+随后又针对 16 个线上 badcase（账户余额/额度/净资产/账户列表查询，以及算数、充值、免息期、
+转账/还款、银行办理、消费统计）补齐成对边界样本，训练集扩到 **1842 条**（accounting 859 /
+unknown 983），端侧模型已用当前数据重训，在 499 条独立留出集上 **499/499**。下文同时保留
+v2、v3 的历史结果，当前 v4 指标见下文「v4（1842 条）实测」。
 
 > 这是一份**二分类**示例：收支记录及资产账户查询/管理标 `__label__accounting`，其余标 `__label__unknown`。
 > 消费统计、账单明细、提醒、实际支付/转账、注册登录账号及实体卡办理等仍属于 `unknown`，边界见标注规范。
@@ -122,8 +125,8 @@ python3 fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin
 >     data/labeling/*_data.txt
 > ```
 >
-> 当前训练集正负样本约 1:1.17（v1 是 1:4），评估时重点看 `accounting` 的 P/R，不要只看整体准确率
-> （全判 unknown 也有约 0.54）。
+> 当前训练集正负样本约 1:1.14（v1 是 1:4），评估时重点看 `accounting` 的 P/R，不要只看整体准确率
+> （全判 unknown 也有约 0.53）。
 
 > **常见疑问：没命中的不就是 unknown 吗？为什么还要给 unknown 训练数据？**
 > fastText 是有监督的**判别式**模型，输出空间 = 训练时见过的标签集合。只喂 accounting 时模型
@@ -232,7 +235,7 @@ bucket 只决定**哈希碰撞概率**，而碰撞取决于「语料里出现过
 | 1 / 6 | 15988 | 32% |
 
 下表是 v2（631 条训练；留出集 60 条）的历史扫描，用来比较 dim/bucket 的相对趋势；v3 的生产配置
-复测见下文「v3（1441 条）历史实测」。当前数据为 1570 条训练 / 499 条留出，尚未重新训练或评估：
+复测见下文「v3（1441 条）历史实测」，当前 v4（1842 条训练 / 499 条留出）见「v4（1842 条）实测」：
 
 | dim / bucket | 体积 | 留出集 P@1 | 8:2 5-seed 均值 | 单 seed 范围 |
 | --- | --- | --- | --- | --- |
@@ -266,8 +269,9 @@ bucket 的下限（固定 dim=20）：
 
 #### 再进一步：乘积量化 `--quantize`（约 1/8，实测无损）
 
-> 下面两张压缩表基于 v2（60 条留出集）；1441 条训练 / 417 条留出集的生产配置历史复测见
-> 下文「v3（1441 条）历史实测」，当时 `dim 20 / bucket 50000 / quantize` 体积约 **0.55 MB**。
+> 下面两张压缩表基于 v2（60 条留出集）；v3 的历史复测见下文「v3（1441 条）历史实测」，
+> 当前 v4（1842 条训练 / 499 条留出）的 `dim 20 / bucket 50000 / quantize` 体积约 **0.56 MB**，
+> 留出集 499/499，见「v4（1842 条）实测」。
 
 脚本新增 `--quantize`：把每个 subvector 压成 1 字节（乘积量化），体积公式（实测吻合）
 `(词表 + bucket) × (nsubq + 1) 字节 + 码本`，其中 `nsubq` 是 fastText 实际切出的 subvector 段数
@@ -355,7 +359,7 @@ python3 fasttext_training_script.py -m models/intent.bin -o models/intent.ftz
 * 报告走独立分支 `mode: "quantize_only"`，比训练报告多了 `source_model`、`compression`、
   `verification`（含 `prediction_agreement` 与前后指标）。
 
-#### 手机端怎么选（下面三档是 v2 在留出集 60 条上的历史结果；v3 的 417 条历史结果见下文）
+#### 手机端怎么选（下面三档是 v2 在留出集 60 条上的历史结果；v3/v4 的结果见下文）
 
 | 目标 | 命令 | 体积 |
 | --- | --- | --- |
@@ -439,7 +443,7 @@ python3 fasttext_training_script.py -m models/intent.bin -o models/intent.ftz
 原因：中文不分词时整句只是一个 token，判别信息全在字符 n-gram 里；`--min-n 3` 会丢掉「花」「元」
 「块」这类**单字/双字线索**，正类样本又少，模型容易退化成「全判 unknown」。所以脚本默认改成了
 `--min-n 1 --max-n 3`（要恢复旧行为就显式传 `--min-n 3 --max-n 6`）。
-注意 v1 的 60 条数据里 `accounting` 只有 12 条，任何指标都波动很大（当前已扩到 722 条，见 §2 数据格式）。
+注意 v1 的 60 条数据里 `accounting` 只有 12 条，任何指标都波动很大（当前已扩到 859 条，见 §2 数据格式）。
 
 #### 数据量：每类要多少条（实测）
 
@@ -480,18 +484,34 @@ python3 fasttext_training_script.py -m models/intent.bin -o models/intent.ftz
 | 训练集内「含金额单位但非记账」的硬负例 | 103 条（v2 34 条） |
 | 数据体检：重复 / 冲突 / 训练-留出完全重叠 | 0 / 0 / 0 |
 
-但别把「留出集满分」当成万事大吉：v3 的 8:2 验证集为 288 条，单轮指标在 **0.96~0.99** 之间抖动
-（所以要多种子看范围）；残余错误集中在两类——**「费用名 + 中文数字」且没有强动词的汇总式陈述**
-（「这个月停车费一共三百二」「交了这个月宽带费九十」），以及**只差一个「了/已经」或一个宾语的最小对**
-（「给朋友转账了三千元」vs「给朋友转账三千元」），模型概率常在 0.5~0.7，需要规则或阈值兜底。
-当时模型在 1441 条训练集上仍有 5 条这类自相矛盾，明细见 [`data/LABELING.md`](data/LABELING.md) §5。
+**v4（1842 条）实测**——在资产账户数据基础上，针对 16 个线上 badcase 补了成对边界样本（账户余额/额度/净资产/账户列表查询；算数、充值、免息期、转账/还款、银行办理、消费统计），并用 `--dim 20 --bucket 50000 --quantize --thread 1 --seed 42` 重训端侧模型：
 
-当前 1570 条训练 / 499 条留出数据已恢复资产账户意图，本次仅做静态数据检查，尚无新的模型指标。
+| 口径 | 结果 |
+| --- | --- |
+| 独立留出集 499 条（`-t data/probe`，与训练集 0 重叠） | **499/499 = 1.0000** |
+| 16 个线上 badcase | **16/16**，预测概率 0.9600~0.9999 |
+| 新写同族改写 32 条（仅覆盖这 16 类，未入仓、与训练/probe 零重叠） | **32/32** |
+| v3 遗留临时回归集 92 + 118 条 | **91/92 + 118/118**（fresh2 的「给舅舅转过去了一千」同时出现在两个标签下，属回归集自身标注冲突） |
+| 8:2 切分（seed 1 / 7 / 42 / 2024，thread 1） | P@1 = 0.9729 / 0.9648 / 0.9675 / 0.9594（均值 0.9662） |
+| 训练集自评（1842 条） | 1827/1842 = 0.9919；15 条残余见 §5 |
+| 数据体检：重复 / 冲突 / 训练-留出完全重叠 | 0 / 0 / 0 |
+| 模型体积 / SHA-256 | 0.5631 MB / `425ed5efba1ca1687b4f3db05daad1103a61eec0c18c726bf701782babfbb7a9` |
+
+> 注意：499 条 probe 在 v4 迭代中被用于挑错，**它已经不再是严格的一次性留出集**；32 条新写改写和 v3 遗留回归集才是更接近「换说法」的泛化检查。正式上线前请再留一批不参与任何调参的线上样本。
+
+但别把「留出集满分」当成万事大吉：v4 在 1842 条训练集上仍有 **15 条**自相矛盾/边界抖动，主要集中在：
+
+* **只差一个完成标记的最小对**（「给朋友转账了三千元」vs「给朋友转账三千元」，「把信用卡欠的钱还上了」vs「把信用卡欠的钱直接还上」）；
+* **「转生活费」这类带用途的裸转账**（probe 标 `accounting`）与「给朋友转账三千元」这类裸转账（`unknown`）字面几乎同形；
+* **资产账户余额 vs 费用余额/消费统计**（「微信零钱还剩多少」`accounting` vs「查一下水费余额」「用微信零钱买东西一共用了多少」`unknown`）；
+* **账本内账户 vs 实体银行账户/游戏账号**（「在账本里新建账户」`accounting` vs「到银行办理新账户」「新建游戏小号」`unknown`）。
+
+这些样本的概率常在 0.5~0.9，单靠 dim=20 的小模型无法稳定区分。业务侧如果对这几类特别敏感，建议加一层规则（完成标记词典、账户/费用关键词、银行/游戏实体词）或人工确认，不要只靠提高模型容量。明细见 [`data/LABELING.md`](data/LABELING.md) §5。
 
 结论与做法：
 
 * 初期参考规模：正样本 **100~200 条**，unknown 类 **300~500 条**（它要覆盖「其余全部」），
-  并留一份独立测试集（别用同一份数据既调参又报指标）。当前示例数据已扩到 **722 / 848 条**，
+  并留一份独立测试集（别用同一份数据既调参又报指标）。当前示例数据已扩到 **859 / 983 条**，
   并配了独立留出集 `data/probe`。
 * 扩数据按**说法维度**补，不是按条数补：谁花的（我/孩子/公司）、金额写法（`30` / `30元` /
   `32.5` / `1,200` / `三百`）、动词（花/买/交/付/充/订/到账/支出）、口语 vs 书面、是否带时间词。
@@ -506,9 +526,9 @@ python3 fasttext_training_script.py -m models/intent.bin -o models/intent.ftz
 
 * `--thread > 1` 时 fastText 是**异步 SGD**：即使固定 `--seed`，多次训练指标也会有波动（线程越多
   越明显，模型参数本身也不一致）。要完全可复现请用 `--thread 1`。
-* 当前正负样本约 1:1.17，不要只看整体准确率（全判 `unknown` 就有约 0.54），重点看 `accounting` 的
+* 当前正负样本约 1:1.14，不要只看整体准确率（全判 `unknown` 就有约 0.53），重点看 `accounting` 的
   P/R（加 `--metrics` 就能看到脚本打印的「每标签指标」）。
-* 指标波动大时优先补数据（每个标签几百条起步）；示例数据已扩到 1570 条，
+* 指标波动大时优先补数据（每个标签几百条起步）；示例数据已扩到 1842 条，
   请用 `-t` 独立留出集评估新数据的效果；旧版指标中的波动幅度仅供参考。
 
 ### 用留出集自评（推荐）
@@ -517,7 +537,7 @@ python3 fasttext_training_script.py -m models/intent.bin -o models/intent.ftz
 python3 fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin
 ```
 
-这条命令会用**全部 1570 条**训练、在**从未参与训练的 499 条**上评估；需手动执行，本次未运行。
+这条命令会用**全部 1842 条**训练、在**从未参与训练的 499 条**上评估；当前 v4 结果为 **499/499**。
 `--report` 里也会把 `data.test` / `data.test_stats` 一起写进 JSON。
 
 ## 5. 输出说明
@@ -572,12 +592,12 @@ python3 fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin
 fasttext_training_script.py        主脚本
 requirements.txt                   依赖
 README.md                          本文件
-data/labeling/accounting_data.txt  示例数据-记账及资产账户类（`__label__accounting` 722 条）
-data/labeling/unknown_data.txt     示例数据-未知类（`__label__unknown` 848 条）
+data/labeling/accounting_data.txt  示例数据-记账及资产账户类（`__label__accounting` 859 条）
+data/labeling/unknown_data.txt     示例数据-未知类（`__label__unknown` 983 条）
 data/probe/accounting_data.txt     独立留出测试集-记账及资产账户类（206 条，与训练集零重叠）
 data/probe/unknown_data.txt        独立留出测试集-未知类（293 条，与训练集零重叠；`-t data/probe` 合并评估）
 data/LABELING.md                   标注规范：判定顺序、边界约定、覆盖维度、实测指标
-models/finalers.bin(.report.json)  默认命令的产物（模型产物默认不进 git；当前 models/ 未跟踪）
-models/finalers_mobile.ftz(.report.json)  v3 端侧小模型（--dim 20 --bucket 50000 --quantize，0.55 MB，尚未用当前资产账户数据重训）
+models/finalers.bin(.report.json)  默认命令的产物（模型产物默认不进 git；`models/` 已在 `.gitignore` 中忽略）
+models/finalers_mobile.ftz(.report.json)  v4 端侧小模型（--dim 20 --bucket 50000 --quantize，0.56 MB，499/499）
 models/intent.ftz(.report.json)    端侧导出示例：由 dim 100 / bucket 200000 的 .bin 量化而来（76.50 MB → 9.68 MB）
 ```
