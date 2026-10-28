@@ -42,6 +42,102 @@ make install-needle-virtual  # 自动创建环境，并在其中安装 cactus-ne
 `source needle-virtual/bin/activate`。可通过 `NEEDLE_VENV=目录` 自定义环境位置，
 通过 `PYTHON=python3.11` 指定创建环境的 Python 版本。
 
+### Needle 3 中文工具调用演示与评测
+
+`tests/test_needle_toolchain.py` 测试「中文一句话 → 资产账户增删改查工具调用 → 内存中的账户 JSON」。
+安装 `cactus-needle` 后，运行内置的 38 条案例：创建 13 条、查询 5 条、修改 11 条、删除 2 条、不调用工具 7 条。
+
+```bash
+make test-needle
+# 等价于
+needle-virtual/bin/python tests/test_needle_toolchain.py
+```
+
+四个工具始终同时注册，由模型选择；每句最多调用一次。它们按账户名称定位目标：
+
+| 工具 | 中文用例 | 参数与结果 |
+| --- | --- | --- |
+| `create_asset_account` | 帮我创建一个支付宝账户，余额12.50元 | `name`、`type` 必填，返回完整 `FCAssetAccountModel` JSON |
+| `query_asset_account` | 查询我的微信余额 | `name` 可省略以查全部，`type` 可筛选类型；返回账户 JSON 数组 |
+| `update_asset_account_info` | 把工行卡的余额改成500元 | `name` 是原名称，`newName` 用于改名；返回修改后的完整账户 JSON |
+| `delete_asset_account` | 从记账应用中删除工行卡账户 | `name` 必须明确且唯一；返回删除状态和被移除的账户 |
+
+案例覆盖 `cash`、`eWallet`、`credit`、`debit`、`investment`、`loan`、`receivable`、`other` 八类账户，
+以及中文金额、币种差异、可空字段、账号前导零和默认账户。否定操作、缺少必要参数、收支记录和真实转账请求不应调用工具。
+模型提取的 `balance` 必须是最小货币单位整数，例如人民币 12.50 元为 1250、1234 日元为 1234、
+科威特第纳尔 1.234 为 1234；创建时未提供的 `currency`、`balance`、`note`、`number` 在 JSON 中为 `null`。
+`accountId` 的 UUID 和 `createdAt`/`updatedAt` 的 UTC 时间由宿主程序生成，不要求模型编造。
+
+修改时省略字段或传 `None` 表示不改；明确清空可空字段使用 `clearFields` 数组，支持 `currency`、`balance`、`note`、`number`。
+余额为 0 和默认账户为 `false` 都是有效修改。原余额非空时，改变币种必须同时指定新余额或清空余额；
+设为默认账户会取消其他账户的默认标记，更新保留原 UUID 和创建时间。
+
+每条案例重置内存账户，并使用独立上下文。`--prompt` 预置微信（123.45 元，默认账户）、工行卡（5000 元）、
+招行信用卡（欠款 1500 元）和现金（300 元）；支付宝未预置，可以新建。所有初始金额均为模拟数据。
+脚本通过 `complete` 保留首轮真实工具调用及参数，再由宿主校验并执行工具；
+打印原始参数、完整结果 JSON、执行后模拟账户，以及工具选择、参数、业务结果和最终状态与预期的差异。
+余额换算由模型完成，宿主不会按预期答案修正；非法枚举或带否定标记的调用会被拒绝。
+逻辑测试独立验证宿主内存操作，**38 条案例尚未运行真实模型验证**。本测试不落库、不接入真实账本或支付。
+`test-needle` 使用 `NEEDLE_VENV` 中现有的 Python，不会自动安装依赖或触发训练。
+
+```bash
+# 只看案例和预期字段，无需 Needle SDK 或模型
+python3 tests/test_needle_toolchain.py --dry-run
+# 测试自定义的一句话
+needle-virtual/bin/python tests/test_needle_toolchain.py --prompt '帮我创建一个支付宝账户，余额12.50元'
+# 只运行查询案例，仍注册全部四个工具用于识别
+needle-virtual/bin/python tests/test_needle_toolchain.py --tool query_asset_account
+# 只使用已有缓存，缺少引擎或权重则报错
+needle-virtual/bin/python tests/test_needle_toolchain.py --offline
+```
+
+首次真实运行仍可能由 SDK 自动下载本机引擎与模型权重；当前环境访问 Hugging Face 的 TLS 问题仍需另行修复。
+安装 pip 包本身不代表引擎和权重已缓存。可通过 `--max-new-tokens` 设置单次推理上限。
+`--tool` 可选上述四个工具名，不能与 `--prompt` 同用。
+
+`scripts/toolchain_traning_script.py` 还保留可选的简洁演示模式：
+
+```bash
+needle-virtual/bin/python scripts/toolchain_traning_script.py --demo
+```
+
+`--demo` 用 `@needle.tool` 定义 `add_expense` 和 `query_expense` 两个工具，通过 `agent.run(..., max_steps=4)`
+处理四句中文示例，打印原始返回值和模拟工具调用记录；可用 `--demo --prompt "午饭花了30块"` 自定义一句。
+工具仅操作内存中的模拟数据，每句独立上下文，不接入真实账本或支付，不计算评测分数，也不写报告文件。
+`python3 scripts/toolchain_traning_script.py --demo --dry-run` 只列出示例，不导入 SDK 或加载模型。
+
+`scripts/toolchain_traning_script.py` 默认使用中文输入和中文工具说明，评测
+`data/needle/chinese_tool_cases.json` 中的 27 条人工用例。它覆盖收支记录、资产账户查询和管理、
+中文金额、缺失参数、多工具调用与依赖前一步结果的工具链；这是一份小规模人工集合，不能当作生产基准。
+
+直接运行脚本可使用这套独立评测：
+
+```bash
+needle-virtual/bin/python scripts/toolchain_traning_script.py
+needle-virtual/bin/python scripts/toolchain_traning_script.py --schema-language both
+needle-virtual/bin/python scripts/toolchain_traning_script.py --prompt "查询我的微信余额"
+```
+
+无需手工下载模型或指定 `--weights`：SDK 使用本地缓存，缺少模型或本机引擎时会从 Hugging Face Hub 自动获取；
+推理在本机完成，无需 API key。默认评测中的工具返回值由 mock 提供，业务工具均为模拟，不接入真实账本或支付。
+`both` 用同一批中文输入分别对比中文和英文工具说明，
+输入始终为中文；`--prompt` 是单句观察模式，不计入准确率。
+
+只校验用例和查看预期调用时，无需安装 Needle 或加载模型：
+
+```bash
+python3 scripts/toolchain_traning_script.py --dry-run
+```
+
+已有 Needle 环境时，也可运行 `needle-virtual/bin/python scripts/toolchain_traning_script.py --dry-run`。
+`--offline` 只使用本地模型和引擎缓存，`--weights /path/to/model.cact` 指定已有模型；
+`--case 用例ID` 可重复指定用例，`--limit N` 只运行前 N 条。
+
+评分严格比较工具数量、名称、顺序及全部参数，并校验参数类型和约束；依赖工具链只有前一步完全匹配，
+才注入 mock 结果继续。`no_call` 只表示没有调用工具，不代表已正确澄清或回答。
+完整报告默认写入 `models/needle_chinese.report.json`，包含原始响应（raw）、confidence、suppressed_calls、
+加载与推理耗时和逐条比较结果，可用 `--report` 改路径。此处尚未运行模型评测，没有模型分数。
+
 ### 本机（macOS + Python 3.9）踩过的两个坑
 
 `fasttext 0.9.3` 的预编译 wheel 在新版 macOS + NumPy 2.x 下有两个真实阻塞问题，已在
@@ -603,8 +699,12 @@ python3 scripts/fasttext_training_script.py -i data/labeling -t data/probe -o /t
 
 ```
 scripts/fasttext_training_script.py  主脚本
+scripts/toolchain_traning_script.py  Needle 3 中文工具调用评测脚本
+tests/test_needle_toolchain.py       Needle 资产账户增删改查测试（38 条案例，make test-needle 入口）
+tests/test_asset_account_conversion.py  资产账户构造、内存增删改查及工具分发逻辑测试（无需模型）
 requirements.txt                   依赖
 README.md                          本文件
+data/needle/chinese_tool_cases.json  Needle 中文工具调用人工用例（27 条）
 data/labeling/accounting_data.txt  示例数据-记账及资产账户类（`__label__accounting` 859 条）
 data/labeling/unknown_data.txt     示例数据-未知类（`__label__unknown` 983 条）
 data/probe/accounting_data.txt     独立留出测试集-记账及资产账户类（206 条，与训练集零重叠）
@@ -613,4 +713,5 @@ data/LABELING.md                   标注规范：判定顺序、边界约定、
 models/finalers.bin(.report.json)  默认命令的产物（模型产物默认不进 git；`models/` 已在 `.gitignore` 中忽略）
 models/finalers_mobile.ftz(.report.json)  v4 端侧小模型（--dim 20 --bucket 50000 --quantize，0.56 MB，499/499）
 models/intent.ftz(.report.json)    端侧导出示例：由 dim 100 / bucket 200000 的 .bin 量化而来（76.50 MB → 9.68 MB）
+models/needle_chinese.report.json  Needle 中文工具调用评测报告（运行评测后生成）
 ```

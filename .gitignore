@@ -3,3 +3,6 @@ models/
 
 # Needle 本地 Python 虚拟环境
 /needle-virtual/
+
+# Python 运行和测试缓存
+__pycache__/

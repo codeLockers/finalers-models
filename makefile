@@ -15,6 +15,7 @@
 #      make mobile-train                  # 一步训练+量化端侧模型（dim=20, bucket=50000）
 #      make run-needle-virtual             # 创建 Needle 虚拟环境
 #      make install-needle-virtual         # 在 Needle 虚拟环境安装 cactus-needle
+#      make test-needle                    # 测试中文资产账户增删改查工具
 #      make clean                         # 清理产出
 #
 #  两个必须知道的规则：
@@ -106,6 +107,10 @@ run-needle-virtual: $(NEEDLE_VENV)/.ready ## 创建 Needle 虚拟环境（已存
 # 直接调用环境内的 Python，确保 pip 安装到 Needle 环境。
 install-needle-virtual: run-needle-virtual ## 在 Needle 虚拟环境安装 cactus-needle（自动创建环境）
 	"$(NEEDLE_VENV)/bin/python" -m pip install cactus-needle
+
+test-needle: ## 用 Needle 测试资产账户增删改查四个工具（不训练）
+	@test -x "$(NEEDLE_VENV)/bin/python" || { echo "缺少 Needle 环境，请先运行 make install-needle-virtual NEEDLE_VENV=\"$(NEEDLE_VENV)\""; exit 2; }
+	"$(NEEDLE_VENV)/bin/python" tests/test_needle_toolchain.py
 
 check-env: ## 环境自检：用内置小样例真的训练 + 预测一次
 	@echo ">> Python: $$($(PYTHON) --version 2>&1)"
@@ -207,4 +212,4 @@ distclean: clean ## 连临时文件、Python 缓存一起删
 # 声明「假目标」：同名文件存在也不会跳过，且不参与依赖时间戳比较
 .PHONY: help install check-env dry-run split-data print-vars train force-train tune mobile \
         mobile-train a predict predict-ftz eval-ftz predict-file interactive \
-        report clean distclean run-needle-virtual install-needle-virtual
+        report clean distclean run-needle-virtual install-needle-virtual test-needle
