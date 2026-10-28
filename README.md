@@ -31,6 +31,17 @@ numpy<2
 python3 scripts/fasttext_training_script.py --check-env
 ```
 
+### Needle 虚拟环境
+
+```bash
+make run-needle-virtual      # 创建 needle-virtual，已存在则复用
+make install-needle-virtual  # 自动创建环境，并在其中安装 cactus-needle
+```
+
+安装命令直接使用虚拟环境里的 Python；如果还要在当前终端使用该环境，执行
+`source needle-virtual/bin/activate`。可通过 `NEEDLE_VENV=目录` 自定义环境位置，
+通过 `PYTHON=python3.11` 指定创建环境的 Python 版本。
+
 ### 本机（macOS + Python 3.9）踩过的两个坑
 
 `fasttext 0.9.3` 的预编译 wheel 在新版 macOS + NumPy 2.x 下有两个真实阻塞问题，已在

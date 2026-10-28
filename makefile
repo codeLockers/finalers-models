@@ -13,6 +13,8 @@
 #      make tune DURATION=120             # 自动调参
 #      make mobile                        # 复用 .bin 量化导出 -> models/finalers_mobile.ftz
 #      make mobile-train                  # 一步训练+量化端侧模型（dim=20, bucket=50000）
+#      make run-needle-virtual             # 创建 Needle 虚拟环境
+#      make install-needle-virtual         # 在 Needle 虚拟环境安装 cactus-needle
 #      make clean                         # 清理产出
 #
 #  两个必须知道的规则：
@@ -31,6 +33,7 @@
 PYTHON    ?= python3
 # 从项目根目录运行 make；数据与模型的相对路径仍相对于当前工作目录。
 SCRIPT    ?= scripts/fasttext_training_script.py
+NEEDLE_VENV ?= needle-virtual
 
 DATA      ?= data/labeling
 # 留出集：可以是单个文件，也可以是用 --split-by-label 拆出来的目录（目录内 *.txt 会被合并）
@@ -91,6 +94,18 @@ help: ## 显示可用命令
 install: ## 安装依赖（README 推荐 --user）
 	@echo ">> 安装 requirements.txt"
 	$(PYTHON) -m pip install --user -r requirements.txt
+
+# venv 和内置 pip 创建成功后再写标记，失败时下次调用可重新创建。
+$(NEEDLE_VENV)/.ready:
+	$(PYTHON) -m venv "$(NEEDLE_VENV)"
+	@touch "$@"
+
+run-needle-virtual: $(NEEDLE_VENV)/.ready ## 创建 Needle 虚拟环境（已存在则复用）
+	@echo "当前终端激活命令: . \"$(NEEDLE_VENV)/bin/activate\""
+
+# 直接调用环境内的 Python，确保 pip 安装到 Needle 环境。
+install-needle-virtual: run-needle-virtual ## 在 Needle 虚拟环境安装 cactus-needle（自动创建环境）
+	"$(NEEDLE_VENV)/bin/python" -m pip install cactus-needle
 
 check-env: ## 环境自检：用内置小样例真的训练 + 预测一次
 	@echo ">> Python: $$($(PYTHON) --version 2>&1)"
@@ -192,4 +207,4 @@ distclean: clean ## 连临时文件、Python 缓存一起删
 # 声明「假目标」：同名文件存在也不会跳过，且不参与依赖时间戳比较
 .PHONY: help install check-env dry-run split-data print-vars train force-train tune mobile \
         mobile-train a predict predict-ftz eval-ftz predict-file interactive \
-        report clean distclean
+        report clean distclean run-needle-virtual install-needle-virtual

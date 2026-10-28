@@ -1,2 +1,5 @@
 # 模型产物（训练 / 量化生成，不入库）
 models/
+
+# Needle 本地 Python 虚拟环境
+/needle-virtual/
