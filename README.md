@@ -1,7 +1,9 @@
 # fastText 文本分类训练脚本
 
-`fasttext_training_script.py` 是一个生产可用的 fastText 有监督分类命令行工具，覆盖
+`scripts/fasttext_training_script.py` 是一个生产可用的 fastText 有监督分类命令行工具，覆盖
 **环境自检 → 数据检查 → 分层切分 → 训练/自动调参 → 评估 → 推理 → JSON 报告** 的完整流程。
+
+本文命令均从项目根目录执行；显式传入的相对路径按当前工作目录解析。
 
 ## 1. 环境准备
 
@@ -26,7 +28,7 @@ numpy<2
 检查环境是否可用（会用内置极小样例训练并预测一次；只检查数据请用 `--dry-run`）：
 
 ```bash
-python3 fasttext_training_script.py --check-env
+python3 scripts/fasttext_training_script.py --check-env
 ```
 
 ### 本机（macOS + Python 3.9）踩过的两个坑
@@ -89,7 +91,7 @@ __label__unknown 明天上午十点提醒我开会
 手上有完整的一份数据时，用 `--split-by-label` 按标签拆成多个文件（对已经拆好的目录再拆一次是幂等的）：
 
 ```bash
-python3 fasttext_training_script.py -i /path/to/full.txt --split-by-label data/labeling
+python3 scripts/fasttext_training_script.py -i /path/to/full.txt --split-by-label data/labeling
 # 等价写法：make split-data SRC=/path/to/full.txt LABEL_DIR=data/labeling
 ```
 
@@ -102,7 +104,7 @@ python3 fasttext_training_script.py -i /path/to/full.txt --split-by-label data/l
 而不是在调参数据上自评：
 
 ```bash
-python3 fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin
+python3 scripts/fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin
 ```
 
 `-t/--test`、`--valid`、`--predict-file` 都支持**目录**：目录里的 `*.txt` 按文件名排序合并后使用
@@ -148,38 +150,38 @@ v2、v3 的历史结果，当前 v4 指标见下文「v4（1842 条）实测」�
 
 ```bash
 # 最简：不传任何数据参数, 默认用 data/labeling, 训练并评估(输出 model.bin)
-python3 fasttext_training_script.py
+python3 scripts/fasttext_training_script.py
 
 # 显式指定数据与模型输出路径, 自动切分 20% 做验证集
-python3 fasttext_training_script.py -i data/labeling -o models/intent.bin
+python3 scripts/fasttext_training_script.py -i data/labeling -o models/intent.bin
 
 # 只看流程不训练（打印环境/数据/参数）
-python3 fasttext_training_script.py -i data/labeling --dry-run
+python3 scripts/fasttext_training_script.py -i data/labeling --dry-run
 
 # 只体检环境：用 4 条内置样例真的训练+预测一次
-python3 fasttext_training_script.py --check-env
+python3 scripts/fasttext_training_script.py --check-env
 
 # 自动调参（60s 上限，用验证集选超参数）
-python3 fasttext_training_script.py -i data/labeling -o models/tuned.bin \
+python3 scripts/fasttext_training_script.py -i data/labeling -o models/tuned.bin \
     --valid-ratio 0.2 --autotune --autotune-duration 60
 
 # 训练 + 立即对文本/文件预测
-python3 fasttext_training_script.py -i data/labeling -o models/intent.bin \
+python3 scripts/fasttext_training_script.py -i data/labeling -o models/intent.bin \
     --predict "午饭花了30块" --predict "帮我记一下明天十点开会"
-python3 fasttext_training_script.py -i data/labeling -o models/intent.bin \
+python3 scripts/fasttext_training_script.py -i data/labeling -o models/intent.bin \
     --predict-file data/probe > preds.jsonl   # 目录或单个文件都行，JSONL 走 stdout
-python3 fasttext_training_script.py -i data/labeling -o models/intent.bin -I   # 交互模式
+python3 scripts/fasttext_training_script.py -i data/labeling -o models/intent.bin -I   # 交互模式
 
 # 只用已有模型推理，不训练
-python3 fasttext_training_script.py -m models/intent.bin --predict "午饭花了30块"
-python3 fasttext_training_script.py -m models/intent.bin -t data/probe --predict-file data/probe
+python3 scripts/fasttext_training_script.py -m models/intent.bin --predict "午饭花了30块"
+python3 scripts/fasttext_training_script.py -m models/intent.bin -t data/probe --predict-file data/probe
 
 # 训练一个给手机端用的小模型：76.5 MB -> 3.9 MB -> 量化后 0.52 MB（留出集指标不变）
-python3 fasttext_training_script.py -i data/labeling -o models/intent_mobile.ftz \
+python3 scripts/fasttext_training_script.py -i data/labeling -o models/intent_mobile.ftz \
     -t data/probe --dim 20 --bucket 50000 --quantize
 
 # 把已经训练好的 .bin 量化导出成 .ftz（推荐：源 .bin 原样保留，导出后自动校验）
-python3 fasttext_training_script.py -m models/intent.bin --quantize -t data/probe
+python3 scripts/fasttext_training_script.py -m models/intent.bin --quantize -t data/probe
 #   -> 默认输出 models/intent.ftz；也可以只写 -o models/intent.ftz（脚本会自动补上 --quantize）
 ```
 
@@ -318,10 +320,10 @@ bucket 的下限（固定 dim=20）：
 
 ```bash
 # 源 .bin 不动, 默认输出同名 .ftz(models/intent.ftz)
-python3 fasttext_training_script.py -m models/intent.bin --quantize -t data/probe
+python3 scripts/fasttext_training_script.py -m models/intent.bin --quantize -t data/probe
 
 # 也可以显式指定输出路径; 后缀是 .ftz 时脚本会自动补上 --quantize
-python3 fasttext_training_script.py -m models/intent.bin -o models/intent.ftz
+python3 scripts/fasttext_training_script.py -m models/intent.bin -o models/intent.ftz
 ```
 
 实测（v2 历史：源模型 `models/intent.bin` = dim 100 / bucket 200000 / 76.50 MB，评估集 `data/probe`）：
@@ -534,7 +536,7 @@ python3 fasttext_training_script.py -m models/intent.bin -o models/intent.ftz
 ### 用留出集自评（推荐）
 
 ```bash
-python3 fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin
+python3 scripts/fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin
 ```
 
 这条命令会用**全部 1842 条**训练、在**从未参与训练的 499 条**上评估；当前 v4 结果为 **499/499**。
@@ -589,7 +591,7 @@ python3 fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin
 ## 6. 产出文件
 
 ```
-fasttext_training_script.py        主脚本
+scripts/fasttext_training_script.py  主脚本
 requirements.txt                   依赖
 README.md                          本文件
 data/labeling/accounting_data.txt  示例数据-记账及资产账户类（`__label__accounting` 859 条）

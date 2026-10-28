@@ -14,37 +14,37 @@
   8. 结果落盘 : 保存 .bin 模型 + .report.json 训练报告(含数据统计与评估指标)
   9. 端侧导出 : --quantize 对训练结果或已有 .bin 做乘积量化, 导出 .ftz 并重载校验
 
-常用示例:
+常用示例(从项目根目录执行；相对路径基于当前工作目录):
   # 用默认数据训练(默认 -i data/labeling, 该目录按标签拆成多个 <标签>_data.txt)
-  python3 fasttext_training_script.py
+  python3 scripts/fasttext_training_script.py
 
   # 按标签拆分: 一份完整数据 -> 每个标签一个文件(写入 data/labeling/<标签>_data.txt)
-  python3 fasttext_training_script.py -i /tmp/sample_intent_data.txt --split-by-label data/labeling
+  python3 scripts/fasttext_training_script.py -i /tmp/sample_intent_data.txt --split-by-label data/labeling
 
   # 指定数据与模型路径, 并用独立测试集评估(-i 可以是单文件, 也可以是拆分目录)
-  python3 fasttext_training_script.py -i data/labeling -o models/intent.bin -t data/probe
+  python3 scripts/fasttext_training_script.py -i data/labeling -o models/intent.bin -t data/probe
 
   # 自动调参(未提供 --valid 时自动切分出验证集)
-  python3 fasttext_training_script.py -i data/labeling --autotune --autotune-duration 60
+  python3 scripts/fasttext_training_script.py -i data/labeling --autotune --autotune-duration 60
 
   # 训练后直接推理 / 交互调试
-  python3 fasttext_training_script.py -o models/intent.bin --predict "午饭花了30块" "提醒我明天交电费"
-  python3 fasttext_training_script.py -o models/intent.bin --interactive
+  python3 scripts/fasttext_training_script.py -o models/intent.bin --predict "午饭花了30块" "提醒我明天交电费"
+  python3 scripts/fasttext_training_script.py -o models/intent.bin --interactive
 
   # 端侧部署: 小模型 + 乘积量化(实测本示例数据 76 MB -> 3.9 MB -> 量化后 0.5 MB, 指标不变)
-  python3 fasttext_training_script.py -o models/intent_mobile.ftz --dim 20 --bucket 50000 --quantize
+  python3 scripts/fasttext_training_script.py -o models/intent_mobile.ftz --dim 20 --bucket 50000 --quantize
 
   # 端侧导出: 把已经训练好的 .bin 量化成 .ftz(推荐流程, 源 .bin 原样保留)
-  python3 fasttext_training_script.py -m models/intent.bin --quantize -t data/probe
+  python3 scripts/fasttext_training_script.py -m models/intent.bin --quantize -t data/probe
   # 默认输出 models/intent.ftz, 想指定路径就加 -o; 报告里会记录前后体积/指标/预测一致率
 
   # 只检查数据不训练 / 只做环境自检(含一次极小样例训练+预测)
-  python3 fasttext_training_script.py -i data/labeling --dry-run
-  python3 fasttext_training_script.py --check-env
+  python3 scripts/fasttext_training_script.py -i data/labeling --dry-run
+  python3 scripts/fasttext_training_script.py --check-env
 
   # 用已有模型推理, 不重新训练
-  python3 fasttext_training_script.py -m models/intent.bin --predict "午饭花了30块"
-  python3 fasttext_training_script.py -m models/intent.bin -t data/probe \
+  python3 scripts/fasttext_training_script.py -m models/intent.bin --predict "午饭花了30块"
+  python3 scripts/fasttext_training_script.py -m models/intent.bin -t data/probe \
       --predict-file data/probe
 
 数据格式(fastText 监督分类标准格式, 每行一条):

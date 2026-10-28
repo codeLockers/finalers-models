@@ -29,7 +29,8 @@
 #    :=  立即展开（定义时求值，配合 $(shell ...) 用）
 # -----------------------------------------------------------------------------
 PYTHON    ?= python3
-SCRIPT    ?= fasttext_training_script.py
+# 从项目根目录运行 make；数据与模型的相对路径仍相对于当前工作目录。
+SCRIPT    ?= scripts/fasttext_training_script.py
 
 DATA      ?= data/labeling
 # 留出集：可以是单个文件，也可以是用 --split-by-label 拆出来的目录（目录内 *.txt 会被合并）

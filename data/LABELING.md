@@ -3,6 +3,8 @@
 本目录的数据用于「记账及资产账户管理 vs 其它意图」的判别。**先定规则再写数据**——否则同一个句子在不同人手里会得到
 不同标签，指标再好也没有意义。
 
+本文命令均从项目根目录执行；显式传入的相对路径按当前工作目录解析。
+
 ## 1. 文件与规模
 
 | 文件 | 用途 | 规模 |
@@ -15,7 +17,7 @@
 新增/整理数据后可以重新拆分（幂等）：
 
 ```bash
-python3 fasttext_training_script.py -i /path/to/full.txt --split-by-label data/labeling
+python3 scripts/fasttext_training_script.py -i /path/to/full.txt --split-by-label data/labeling
 # 或 make split-data SRC=/path/to/full.txt LABEL_DIR=data/labeling
 ```
 
@@ -125,12 +127,12 @@ python3 fasttext_training_script.py -i /path/to/full.txt --split-by-label data/l
 
 ```bash
 # 1) 独立留出集（全量训练 + 留出评估，最可信；--thread 1 保证可复现）
-python3 fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin --thread 1
+python3 scripts/fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin --thread 1
 # 2) 默认 8:2 切分（建议多种子看指标范围）
-python3 fasttext_training_script.py -o models/intent.bin --thread 1
+python3 scripts/fasttext_training_script.py -o models/intent.bin --thread 1
 # 3) 数据体检：重复行应为空、格式检查应为「通过」
 cat data/labeling/*_data.txt | sort | uniq -d
-python3 fasttext_training_script.py -i data/labeling --dry-run -q
+python3 scripts/fasttext_training_script.py -i data/labeling --dry-run -q
 ```
 
 | 口径 | 结果 |
