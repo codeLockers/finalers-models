@@ -9,44 +9,44 @@
 
 | 文件 | 用途 | 规模 |
 | --- | --- | --- |
-| `labeling/*.txt` | 训练 + 调参（仓库默认数据，`-i data/labeling` 合并读取） | **2042 条**：`accounting_data.txt` 939 / `unknown_data.txt` 1063 / `mixed_intents_data.txt` 40 |
-| `probe/*.txt` | **独立留出测试集**（与训练集 0 重叠，不参与训练；`-t data/probe` 合并读取） | **859 条**：`accounting_data.txt` 286 / `unknown_data.txt` 373 / `reminder_data.txt` 80 / `todo_data.txt` 80 / `mixed_intents_data.txt` 40 |
+| `labeling/*.txt` | 训练 + 调参（仓库默认数据，`-i data/labeling` 合并读取） | **2890 条**：`accounting_data.txt` 963 / `unknown_data.txt` 995 / `reminder_data.txt` 464 / `todo_data.txt` 404 / `mixed_intents_data.txt` 64 |
+| `probe/*.txt` | **独立留出测试集**（与训练集 0 重叠，不参与训练；`-t data/probe` 合并读取） | **859 条**：`accounting_data.txt` 286 / `unknown_data.txt` 347 / `reminder_data.txt` 106 / `todo_data.txt` 80 / `mixed_intents_data.txt` 40 |
 
-另有待接入的提醒语料 [`labeling/reminder_data.text`](labeling/reminder_data.text)，共 **400 条**，
+提醒语料 [`labeling/reminder_data.txt`](labeling/reminder_data.txt) 已接入，共 **464 条**，
 每行使用 `__label__reminder`。覆盖明确要求创建、查询、修改、取消、暂停/恢复、延后和完成提醒的请求，
 以及周期、条件触发、带金额或账户操作的提醒、多个独立提醒和缺少时间等参数的提醒请求。
 只要求将来提醒记账或创建账户时标 `reminder`；同时要求立即记账和设置提醒的跨领域双请求未纳入这份单标签语料。
 纯日程陈述、普通信息记录、提醒使用方法咨询和单纯拒绝创建提醒不属于这份语料。
 
-待办语料 [`labeling/todo_data.text`](labeling/todo_data.text) 同样待接入，共 **400 条**，每行使用 `__label__todo`。
+待办语料 [`labeling/todo_data.txt`](labeling/todo_data.txt) 已接入，共 **404 条**，每行使用 `__label__todo`。
 覆盖明确记录未完成行动、查询、修改、完成/重开、删除/归档，以及清单分组、优先级、截止日期和多个待办。
 待办带日期或截止时间仍可标 `todo`；明确要求到点通知的请求属于提醒，
 同时添加待办并设置提醒的双意图句未纳入这份单标签语料。
 将记账或付款等行动加入待办属于 `todo`；直接记账、实际代执行、静态信息记录、纯日程陈述、
 咨询使用方法或单纯拒绝添加待办不属于这份语料。
 
-**当前目录读取只加载 `*.txt`，因此这两份 `.text` 文件尚未自动加载；默认目录已包含 40 条混合语料，共 4 类标签。**
-各标签出现次数为 `accounting` 967、`unknown` 1063、`reminder` 28、`todo` 28；一条多标签样本会计入多个标签。
-两个存量单标签 `.txt` 合计仍为 **2002 条**；下文二分类规则说明这些旧样本的标注口径。
-正式训练前需将现有训练及留出集中仍标为 `unknown` 的提醒和待办迁移到对应类别，统一规则并补齐新类别评估。
-多标签训练应显式使用 `--loss ova`；后续接入 `.text` 单意图语料时再统一扩展名。
+**当前目录读取 `*.txt`，四份单标签语料和一份混合语料均已自动加载，共 4 类标签。**
+各标签出现次数为 `accounting` 1007、`unknown` 995、`reminder` 516、`todo` 448；一条多标签样本会计入多个标签。
+四份单标签 `.txt` 合计 **2826 条**；下文二分类规则说明存量样本的标注口径。
+此前 `unknown` 中明确的提醒/待办样本已迁移到对应类别，并补齐了提醒留出集；训练多标签模型应显式使用 `--loss ova`。
 
-当前 `data/probe/` 已为 `data/labeling/` 中的五个活动 `.txt` 文件分别生成测试文件：共 **859 条**，
-其中 accounting 286、unknown 373、reminder 80、todo 80、混合多标签 40；各文件与训练语料规范化后零重叠。
-提醒和待办的 `.text` 源语料也各有对应的 80 条 `.txt` 测试样本。此次仅补充数据与文档，**尚未训练模型**。
+当前 `data/probe/` 已为训练目录中的五个 `.txt` 文件分别生成测试文件：共 **859 条**，
+其中 accounting 286、unknown 347、reminder 106、todo 80、混合多标签 40；各文件与训练语料规范化后零重叠。
+此次仅补充数据与文档，**尚未训练模型**。
 
-本轮为四个文件各追加 **80 条同类别多操作样本**，合计新增 **320 条**；四份语料总计 **2802 条**。
+本轮为四个文件各追加 **80 条同类别多操作样本**，合计新增 **320 条**；针对失败案例又追加 24 条 accounting 多笔收支样本和 24 条跨意图标注。
+当前四份单标签语料合计 **2826 条**，五份训练语料合计 **2890 条**。
 每句包含两到四项同一类别下的操作，仍只写一个标签。覆盖重复动词、后项省略动词、逗号/顿号/分号和无标点说法，
 以及多个对象分别创建、查询、修改、删除或完成等组合；不加入跨类别双请求。
 提醒句前面明确要求提醒时，后续并列的时间和事项可共享提醒语境，如“后天8点提醒我遛狗，提醒我明天体检，下午2点去拿快递”。
 `unknown` 的新增句子包含多项均不属于记账、提醒或待办管理的请求，如多项算数、消费统计、方法咨询或静态信息保存。
 本轮只补充并校验语料，尚未训练或评估新增样本；下文实测指标仍来自原来的 1842 条训练数据。
 
-跨意图多操作的标注源数据另存于 [`annotations/mixed_intents.jsonl`](annotations/mixed_intents.jsonl)，共 **40 条**，
+跨意图多操作的标注源数据另存于 [`annotations/mixed_intents.jsonl`](annotations/mixed_intents.jsonl)，共 **64 条**，
 保存原句、完整 `intents` 数组和可空的 `routing_label` 提示。
 运行 `make export-mixed-intents` 默认导出到 [`labeling/mixed_intents_data.txt`](labeling/mixed_intents_data.txt)；
 通过 `MIXED_INPUT` / `MIXED_OUTPUT` 可覆盖路径。命令只校验和导出，不触发训练；随后目录训练会加载该 `.txt`。
-JSONL 为标注源数据，40 条源样本和导出的 40 行不重复计数；五份语料共 **2842 条**（2802 条单标签 + 40 条混合）。
+JSONL 为标注源数据，64 条源样本和导出的 64 行不重复计数；五份语料共 **2890 条**（2826 条单标签 + 64 条混合）。
 `routing_label` 不参与多标签输出，`null` 也正常导出。
 字段、独立请求的判定、未定单路由的含义及导出校验规则见 [`annotations/README.md`](annotations/README.md)。
 
