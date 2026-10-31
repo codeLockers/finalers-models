@@ -236,24 +236,25 @@ python3 scripts/fasttext_training_script.py -i /path/to/full.txt --split-by-labe
 但会被 `-i` 一起读入训练，所以发现不是本次生成的历史文件时脚本会**直接报错中止（不写任何文件）**，
 按提示删掉或移走这些残留再重跑即可。
 
-另外带一份**独立留出测试集** `data/probe/`（499 条 = accounting 206 / unknown 293），同样按标签拆成
-`accounting_data.txt` / `unknown_data.txt`，刻意与训练集**零重叠**，用来量「换说法的泛化」，
+另外带一份**独立留出测试集** `data/probe/`（当前 **859 条** = accounting 286 / unknown 373 / reminder 80 / todo 80 / 混合多标签 40）。
+它为 `data/labeling/` 当前加载的每个 `.txt` 训练文件提供对应测试文件，刻意与训练集**零重叠**，用来量「换说法的泛化」；
+提醒和待办的 `.text` 源语料也各有对应的 80 条 `.txt` 测试集，源 `.text` 仍不会被训练目录自动加载。
 而不是在调参数据上自评：
 
 ```bash
-python3 scripts/fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin
+python3 scripts/fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin --loss ova
 ```
 
 `-t/--test`、`--valid`、`--predict-file` 都支持**目录**：目录里的 `*.txt` 按文件名排序合并后使用
-（fastText 只认单文件，脚本会自动合并到临时文件，结束后清理）。所以也可以只挑一个类单独看：
-`-t data/probe/accounting_data.txt`。
+（fastText 只认单文件，脚本会自动合并到临时文件，结束后清理）。所以也可以只挑一个文件单独看：
+`-t data/probe/accounting_data.txt`、`-t data/probe/reminder_data.txt` 等。
 
-2026-10-27 恢复资产账户相关样本：微信/支付宝/银行卡余额查询、账户创建、余额/额度修改、账户列表、
+**历史 v4（2026-10-27）**恢复资产账户相关样本：微信/支付宝/银行卡余额查询、账户创建、余额/额度修改、账户列表、
 改名和归档等均属于 `accounting`。同时修正了旧数据中 21 条余额/额度/账户查询负例。
 随后又针对 16 个线上 badcase（账户余额/额度/净资产/账户列表查询，以及算数、充值、免息期、
 转账/还款、银行办理、消费统计）补齐成对边界样本，训练集扩到 **1842 条**（accounting 859 /
 unknown 983），端侧模型已用当时数据重训，在 499 条独立留出集上 **499/499**。下文保留
-v2、v3、v4 的历史结果，v4 指标见下文「v4（1842 条）实测」。
+v2、v3、v4 的历史结果，v4 指标见下文「v4（1842 条）历史实测」。
 
 > 以下二分类说明针对两个存量单标签文件及历史模型；默认目录现已另含 40 条多标签语料。
 > 旧口径将收支记录及资产账户查询/管理标为 `accounting`，其余标为 `unknown`；其中提醒和待办仍待迁移。
@@ -374,7 +375,7 @@ bucket 只决定**哈希碰撞概率**，而碰撞取决于「语料里出现过
 | 1 / 6 | 15988 | 32% |
 
 下表是 v2（631 条训练；留出集 60 条）的历史扫描，用来比较 dim/bucket 的相对趋势；v3 的生产配置
-复测见下文「v3（1441 条）历史实测」，历史 v4（1842 条训练 / 499 条留出）见「v4（1842 条）实测」：
+复测见下文「v3（1441 条）历史实测」，历史 v4（1842 条训练 / 499 条留出）见「v4（1842 条）历史实测」：
 
 | dim / bucket | 体积 | 留出集 P@1 | 8:2 5-seed 均值 | 单 seed 范围 |
 | --- | --- | --- | --- | --- |
@@ -410,7 +411,7 @@ bucket 的下限（固定 dim=20）：
 
 > 下面两张压缩表基于 v2（60 条留出集）；v3 的历史复测见下文「v3（1441 条）历史实测」，
 > 历史 v4（1842 条训练 / 499 条留出）的 `dim 20 / bucket 50000 / quantize` 体积约 **0.56 MB**，
-> 留出集 499/499，见「v4（1842 条）实测」。
+> 留出集 499/499，见「v4（1842 条）历史实测」。
 
 脚本新增 `--quantize`：把每个 subvector 压成 1 字节（乘积量化），体积公式（实测吻合）
 `(词表 + bucket) × (nsubq + 1) 字节 + 码本`，其中 `nsubq` 是 fastText 实际切出的 subvector 段数
@@ -623,7 +624,7 @@ python3 scripts/fasttext_training_script.py -m models/intent.bin -o models/inten
 | 训练集内「含金额单位但非记账」的硬负例 | 103 条（v2 34 条） |
 | 数据体检：重复 / 冲突 / 训练-留出完全重叠 | 0 / 0 / 0 |
 
-**v4（1842 条）实测**——在资产账户数据基础上，针对 16 个线上 badcase 补了成对边界样本（账户余额/额度/净资产/账户列表查询；算数、充值、免息期、转账/还款、银行办理、消费统计），并用 `--dim 20 --bucket 50000 --quantize --thread 1 --seed 42` 重训端侧模型：
+**v4（1842 条）历史实测**——在资产账户数据基础上，针对 16 个线上 badcase 补了成对边界样本（账户余额/额度/净资产/账户列表查询；算数、充值、免息期、转账/还款、银行办理、消费统计），并用 `--dim 20 --bucket 50000 --quantize --thread 1 --seed 42` 重训端侧模型：
 
 | 口径 | 结果 |
 | --- | --- |
@@ -676,7 +677,7 @@ python3 scripts/fasttext_training_script.py -m models/intent.bin -o models/inten
 python3 scripts/fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin --loss ova
 ```
 
-这条命令会用**全部 2042 条 `.txt` 数据**训练，在 **499 条留出样本**上评估；`.text` 语料尚未自动加载。
+这条命令会用**全部 2042 条 `.txt` 数据**训练，在当前 **859 条留出样本**上评估；`.text` 语料尚未自动加载。
 重新训练前需先迁移存量提醒和待办标签，并为新类别补齐独立评估样本。
 v4 在原来 1842 条训练数据上的历史结果为 **499/499**，本轮新增数据尚未训练评估。
 `--report` 里也会把 `data.test` / `data.test_stats` 一起写进 JSON。
@@ -722,7 +723,7 @@ v4 在原来 1842 条训练数据上的历史结果为 **499/499**，本轮新�
   （`size_before_mb/size_after_mb/ratio/saved_mb`）与 `verification`
   （`is_quantized/vocab_size_same/labels_same/prediction_agreement`，有评估集时还有前后指标与 `precision_delta`）。
 * 评估集给**目录**（如 `data/probe`）时，脚本会先把目录内 `*.txt` 按文件名排序合并成临时文件再交给
-  fastText（当前数据合并为 499 条、2 个文件），结束后自动清理。
+  fastText（当前数据合并为 859 条、5 个文件），结束后自动清理。
 * **多标签数据**会自动检测并用 `loss=ova` 提示；单标签数据在 `--metrics` 里会说明 `P@1 即 accuracy`。
 * 切分时若某个标签样本太少，会打印实际切分比例与目标比例的偏差提醒。
 * autotune 时若验证集同时用于选超参数，会提示指标偏乐观，建议另给 `--test`。
@@ -744,8 +745,11 @@ data/labeling/reminder_data.text   待接入语料-提醒类（`__label__reminde
 data/labeling/todo_data.text       待接入语料-待办类（`__label__todo` 400 条）
 data/annotations/mixed_intents.jsonl  跨意图多操作标注源数据（40 条，本文件不直接传给训练脚本）
 data/labeling/mixed_intents_data.txt  上述 JSONL 的多标签导出（40 行，默认目录训练会加载）
-data/probe/accounting_data.txt     独立留出测试集-记账及资产账户类（206 条，与训练集零重叠）
-data/probe/unknown_data.txt        独立留出测试集-未知类（293 条，与训练集零重叠；`-t data/probe` 合并评估）
+data/probe/accounting_data.txt     独立留出测试集-记账及资产账户类（286 条，与训练集零重叠）
+data/probe/unknown_data.txt        独立留出测试集-未知类（373 条，与训练集零重叠）
+data/probe/reminder_data.txt       提醒类独立留出测试集（80 条，与训练集零重叠）
+data/probe/todo_data.txt           待办类独立留出测试集（80 条，与训练集零重叠）
+data/probe/mixed_intents_data.txt  跨意图多标签独立留出测试集（40 条，与训练集零重叠；`-t data/probe` 合并评估）
 data/LABELING.md                   标注规范：判定顺序、边界约定、覆盖维度、实测指标
 models/finalers.bin(.report.json)  默认命令的产物（模型产物默认不进 git；`models/` 已在 `.gitignore` 中忽略）
 models/finalers_mobile.ftz(.report.json)  v4 端侧小模型（--dim 20 --bucket 50000 --quantize，0.56 MB，499/499）

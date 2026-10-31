@@ -10,7 +10,7 @@
 | 文件 | 用途 | 规模 |
 | --- | --- | --- |
 | `labeling/*.txt` | 训练 + 调参（仓库默认数据，`-i data/labeling` 合并读取） | **2042 条**：`accounting_data.txt` 939 / `unknown_data.txt` 1063 / `mixed_intents_data.txt` 40 |
-| `probe/<标签>_data.txt` | **独立留出测试集**（与训练集 0 重叠，不参与训练；`-t data/probe` 合并读取） | **499 条**：`accounting_data.txt` 206 / `unknown_data.txt` 293 |
+| `probe/*.txt` | **独立留出测试集**（与训练集 0 重叠，不参与训练；`-t data/probe` 合并读取） | **859 条**：`accounting_data.txt` 286 / `unknown_data.txt` 373 / `reminder_data.txt` 80 / `todo_data.txt` 80 / `mixed_intents_data.txt` 40 |
 
 另有待接入的提醒语料 [`labeling/reminder_data.text`](labeling/reminder_data.text)，共 **400 条**，
 每行使用 `__label__reminder`。覆盖明确要求创建、查询、修改、取消、暂停/恢复、延后和完成提醒的请求，
@@ -30,6 +30,10 @@
 两个存量单标签 `.txt` 合计仍为 **2002 条**；下文二分类规则说明这些旧样本的标注口径。
 正式训练前需将现有训练及留出集中仍标为 `unknown` 的提醒和待办迁移到对应类别，统一规则并补齐新类别评估。
 多标签训练应显式使用 `--loss ova`；后续接入 `.text` 单意图语料时再统一扩展名。
+
+当前 `data/probe/` 已为 `data/labeling/` 中的五个活动 `.txt` 文件分别生成测试文件：共 **859 条**，
+其中 accounting 286、unknown 373、reminder 80、todo 80、混合多标签 40；各文件与训练语料规范化后零重叠。
+提醒和待办的 `.text` 源语料也各有对应的 80 条 `.txt` 测试样本。此次仅补充数据与文档，**尚未训练模型**。
 
 本轮为四个文件各追加 **80 条同类别多操作样本**，合计新增 **320 条**；四份语料总计 **2802 条**。
 每句包含两到四项同一类别下的操作，仍只写一个标签。覆盖重复动词、后项省略动词、逗号/顿号/分号和无标点说法，
@@ -56,7 +60,8 @@ python3 scripts/fasttext_training_script.py -i /path/to/full.txt --split-by-labe
 ```
 
 留出集 `data/probe/` 用的是同一套命名与拆分命令（`--split-by-label data/probe`）：`-t data/probe`
-会把目录里的两个文件合并后再评估，只想看某个类时直接 `-t data/probe/accounting_data.txt`。
+会把目录里的五个 `.txt` 文件合并后再评估，只想看一个类别时直接指定对应文件，例如
+`-t data/probe/accounting_data.txt` 或 `-t data/probe/reminder_data.txt`。
 
 ## 2. 存量二分类语料的判定规则（待统一）
 
@@ -153,17 +158,18 @@ python3 scripts/fasttext_training_script.py -i /path/to/full.txt --split-by-labe
 | 用途化裸转账 | 给弟弟转生活费1000元 | 给朋友转账三千元 |
 | 记账其它元操作 | — | 打开记账软件、怎么把账本导出成Excel、刚才那笔记错了怎么删 |
 
-## 4. 实测（历史记录）
+## 4. 实测（历史记录；当前 859 条 probe 尚未训练）
 
 2026-10-27 先恢复资产账户相关样本，随后针对 16 个线上 badcase 补齐账户查询、算数/充值/免息期、
 转账/还款/银行办理/消费统计的成对边界样本。当时训练集 **1842 条**（accounting 859 / unknown 983）、
 独立留出集 **499 条**；模型已用 `--dim 20 --bucket 50000 --quantize --thread 1 --seed 42` 重训。
+这里的 499 条仅代表历史 v4 评估口径，不代表当前 `data/probe/` 的规模。
 
 以下为该版数据的历史结果；下面的命令会读取更新后的语料，需要重新评估新增同类多操作样本的效果。
 
 ```bash
 # 1) 独立留出集（全量训练 + 留出评估，最可信；--thread 1 保证可复现）
-python3 scripts/fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin --thread 1
+python3 scripts/fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin --loss ova --thread 1
 # 2) 默认 8:2 切分（建议多种子看指标范围）
 python3 scripts/fasttext_training_script.py -o models/intent.bin --thread 1
 # 3) 数据体检：重复行应为空、格式检查应为「通过」
