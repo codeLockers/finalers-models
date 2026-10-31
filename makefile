@@ -6,6 +6,7 @@
 #      make split-data SRC=full.txt       # 按标签拆成 data/labeling/<标签>_data.txt
 #                                         #   留出集同理: make split-data SRC=old_holdout.txt LABEL_DIR=data/probe
 #      make dry-run                       # 只检查数据，不训练
+#      make export-mixed-intents          # 将跨意图 JSONL 导出为多标签 fastText 文本（不训练）
 #      make train                         # 训练 + 留出集评估 -> models/intent.bin
 #      make predict TEXT="午饭花了30块"    # 用 .bin 模型预测
 #      make predict-ftz TEXT="午饭花了30块" # 用 .ftz 端侧模型预测
@@ -37,6 +38,9 @@ SCRIPT    ?= scripts/fasttext_training_script.py
 NEEDLE_VENV ?= needle-virtual
 
 DATA      ?= data/labeling
+# 跨意图语料独立导出到 labeling，后续目录训练会合并生成的 *.txt。
+MIXED_INPUT  ?= data/annotations/mixed_intents.jsonl
+MIXED_OUTPUT ?= data/labeling/mixed_intents_data.txt
 # 留出集：可以是单个文件，也可以是用 --split-by-label 拆出来的目录（目录内 *.txt 会被合并）
 HOLDOUT   ?= data/probe
 # 按标签拆分数据的输出目录（--split-by-label 用；也可以直接当作 -i 的输入目录）
@@ -118,6 +122,9 @@ check-env: ## 环境自检：用内置小样例真的训练 + 预测一次
 
 dry-run: ## 只做数据检查与切分，不训练
 	$(PY) -i $(DATA) --dry-run
+
+export-mixed-intents: ## 导出跨意图多标签文本：MIXED_INPUT=源JSONL MIXED_OUTPUT=输出路径（不训练）
+	$(PYTHON) scripts/export_mixed_intents.py --input "$(MIXED_INPUT)" --output "$(MIXED_OUTPUT)"
 
 split-data: ## 按标签拆分完整数据：SRC=源文件（输出到 LABEL_DIR，每类一个文件）
 	@test -n "$(SRC)" || { echo "用法: make split-data SRC=/path/to/full.txt [LABEL_DIR=data/labeling]"; exit 2; }
@@ -210,6 +217,6 @@ distclean: clean ## 连临时文件、Python 缓存一起删
 	-find . -name '*.pyc' -delete
 
 # 声明「假目标」：同名文件存在也不会跳过，且不参与依赖时间戳比较
-.PHONY: help install check-env dry-run split-data print-vars train force-train tune mobile \
+.PHONY: help install check-env dry-run export-mixed-intents split-data print-vars train force-train tune mobile \
         mobile-train a predict predict-ftz eval-ftz predict-file interactive \
         report clean distclean run-needle-virtual install-needle-virtual test-needle
