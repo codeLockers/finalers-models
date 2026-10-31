@@ -186,28 +186,29 @@ __label__unknown 明天会下雨吗
 | 文件 | 标签 | 含义 | 条数 |
 | --- | --- | --- | --- |
 | `accounting_data.txt` | `__label__accounting` | 记录/陈述已发生的收支，或查询/管理资产与负债账户 | 963 |
-| `unknown_data.txt` | `__label__unknown` | 尚未覆盖到专门类别的兜底意图 | 995 |
+| `unknown_data.txt` | `__label__unknown` | 尚未覆盖到专门类别的兜底意图 | 1024 |
 | `reminder_data.txt` | `__label__reminder` | 创建、查询、修改和取消提醒 | 464 |
-| `todo_data.txt` | `__label__todo` | 创建、查询、修改和管理待办事项 | 404 |
+| `todo_data.txt` | `__label__todo` | 创建、查询、修改和管理待办事项 | 420 |
 | `mixed_intents_data.txt` | `accounting` / `reminder` / `todo` 的多标签组合 | 同一句包含多个不同意图 | 64 |
 
-四个单标签文件合计 **2826 条**，加上 64 条混合语料后，默认目录读取 **2890 条、4 个标签**。
-各标签出现次数为 `accounting` 1007、`unknown` 995、`reminder` 516、`todo` 448；多标签行会计入多个标签。
+四个单标签文件合计 **2871 条**，加上 64 条混合语料后，默认目录读取 **2935 条、4 个标签**。
+各标签出现次数为 `accounting` 1007、`unknown` 1024、`reminder` 516、`todo` 464；多标签行会计入多个标签。
 每行都保留 `__label__` 前缀。标签名刻意用英文，避免中文标签在代码 / JSON / 日志里
 出现编码与转义问题。数据是**按「说法覆盖维度」铺出来的**（不是按条数堆），判定规则、边界约定、
 覆盖矩阵和实测指标都写在 [`data/LABELING.md`](data/LABELING.md)。
 
 [`data/labeling/reminder_data.txt`](data/labeling/reminder_data.txt) 已接入 **464 条**
 `__label__reminder` 语料，覆盖提醒创建、查询、修改、取消和周期/条件触发等说法。
-[`data/labeling/todo_data.txt`](data/labeling/todo_data.txt) 已接入 **404 条** `__label__todo` 语料，
+[`data/labeling/todo_data.txt`](data/labeling/todo_data.txt) 已接入 **420 条** `__label__todo` 语料，
 覆盖待办创建、查询、修改、完成、删除、清单管理和多个待办；截止时间与提醒通知分开标注。
 此前 `unknown` 中明确的提醒/待办样本已迁移到对应标签，剩余 `unknown` 保留方法咨询、静态信息记录和其它未覆盖意图。
 正式训练多标签模型应显式使用 `--loss ova`。
 
 本轮四个单标签文件各追加 **80 条同类别多操作样本**，共新增 **320 条**；针对失败案例又追加 24 条
-`accounting` 多笔收支样本，并补充 24 条跨意图标注。当前五份训练语料合计 **2890 条**。
-每句包含两到四项同类别操作，标签只写一次，覆盖后项省略动词、多时间、多对象和不同标点写法；
-尚未训练，后文模型分数仍是 1842 条训练数据的历史评估，新增样本的标注边界见 [`data/LABELING.md`](data/LABELING.md)。
+`accounting` 多笔收支样本，并补充 24 条跨意图标注。针对新反馈的 7 条失败案例，再补充 16 条 `todo` 和 29 条 `unknown` 边界样本。
+当前五份训练语料合计 **2935 条**。
+同类别多操作样本每句包含两到四项操作，标签只写一次，覆盖后项省略动词、多时间、多对象和不同标点写法；
+本次新增的 45 条边界样本尚未重新训练评估；后文模型分数仍是 1842 条训练数据的历史评估，标注边界见 [`data/LABELING.md`](data/LABELING.md)。
 
 跨意图多操作预备语料另存于 [`data/annotations/mixed_intents.jsonl`](data/annotations/mixed_intents.jsonl)，
 目前 **64 条**，使用 `text`、完整 `intents` 和可空的 `routing_label`。
@@ -221,7 +222,7 @@ make export-mixed-intents MIXED_INPUT=data/annotations/mixed_intents.jsonl MIXED
 
 导出只使用 Python 标准库，不加载 fastText，也不触发训练；随后使用 `-i data/labeling` 训练时会加载这个新 `.txt`。
 JSONL 始终是标注源数据；64 条源样本对应导出的 64 行，不重复计入语料数量。
-`data/labeling/` 五份语料合计 **2890 条**（2826 条单标签语料 + 64 条混合语料），全部为会被目录模式读取的 `.txt` 文件。
+`data/labeling/` 五份语料合计 **2935 条**（2871 条单标签语料 + 64 条混合语料），全部为会被目录模式读取的 `.txt` 文件。
 `routing_label` 不参与多标签输出，值为 `null` 的样本也正常导出；单标签分流导出仍待后续确定策略。
 格式、输出示例和校验规则见 [`data/annotations/README.md`](data/annotations/README.md)。
 
@@ -653,12 +654,12 @@ python3 scripts/fasttext_training_script.py -m models/intent.bin -o models/inten
 结论与做法：
 
 * 初期参考规模：正样本 **100~200 条**，unknown 类 **300~500 条**（它要覆盖「其余全部」），
-  并留一份独立测试集（别用同一份数据既调参又报指标）。两个存量单标签文件当前为 **963 / 995 条**，
+  并留一份独立测试集（别用同一份数据既调参又报指标）。两个存量单标签文件当前为 **963 / 1024 条**，
   并配了独立留出集 `data/probe`。
 * 扩数据按**说法维度**补，不是按条数补：谁花的（我/孩子/公司）、金额写法（`30` / `30元` /
   `32.5` / `1,200` / `三百`）、动词（花/买/交/付/充/订/到账/支出）、口语 vs 书面、是否带时间词。
-* **优先补硬负例**（当前最大的坑）：含金额或数字但不记账的句子——查询「这个月一共花了多少钱」、
-  算数「128 的 20% 是多少」、查账单「信用卡还款日是几号」、提醒「提醒我明天交电费350」。
+* **优先补边界样本**：含金额或数字但不记账的句子——查询「这个月一共花了多少钱」、
+  算数「128 的 20% 是多少」、查账单「信用卡还款日是几号」属于 `unknown`；「提醒我明天交电费350」属于 `reminder`。
 * 低成本来源：线上真实日志抽样（最靠谱）> 对现有样本做受控改写（换动词/换金额写法/口语化）
   > 主动学习（用模型给线上句子打概率，只人工标注 0.5~0.7 的边界样本，单条信息量最大）。
 * 数据到量之前，可用 `-k 2 --threshold` 提高召回（代价是误报上升），先保证不漏；数据到量之后，
@@ -670,7 +671,7 @@ python3 scripts/fasttext_training_script.py -m models/intent.bin -o models/inten
   越明显，模型参数本身也不一致）。要完全可复现请用 `--thread 1`。
 * 历史二分类数据的正负样本约 1:1.13；当前已扩展为四个标签，不要只看整体准确率，使用 `--metrics` 查看每个标签的
   P/R/F1。
-* 指标波动大时优先补数据（每个标签几百条起步）；默认目录读取 2890 条，含 64 条多标签语料，
+* 指标波动大时优先补数据（每个标签几百条起步）；默认目录读取 2935 条，含 64 条多标签语料，
   请用 `-t` 独立留出集评估新数据的效果；旧版指标中的波动幅度仅供参考。
 
 ### 用留出集自评（推荐）
@@ -679,7 +680,7 @@ python3 scripts/fasttext_training_script.py -m models/intent.bin -o models/inten
 python3 scripts/fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin --loss ova
 ```
 
-这条命令会用**全部 2890 条 `.txt` 数据**训练，在当前 **859 条留出样本**上评估；提醒和待办语料已自动加载。
+这条命令会用**全部 2935 条 `.txt` 数据**训练，在当前 **859 条留出样本**上评估；提醒和待办语料已自动加载。
 提醒和待办的留出样本已补齐，训练后应重点查看各标签的召回率及混合样本的多标签命中情况。
 v4 在原来 1842 条训练数据上的历史结果为 **499/499**，本轮新增数据尚未训练评估。
 `--report` 里也会把 `data.test` / `data.test_stats` 一起写进 JSON。
@@ -704,11 +705,11 @@ v4 在原来 1842 条训练数据上的历史结果为 **499/499**，本轮新�
   需要 P/R/F1 与每标签指标（判断是「漏报」还是「误报」）时加 `--metrics`。
 
 * **日志全部走 stderr**；`--predict-file` 的 JSONL 结果走 **stdout**，可以直接 `> preds.jsonl`
-  或管道给下游：
+  或管道给下游。以下仅展示输出结构与数值格式：
 
   ```json
   {"text": "打车花了25", "predictions": [{"label": "accounting", "prob": 0.9512649178504944}], "true_labels": ["accounting"], "hit": true}
-  {"text": "提醒我明天交电费", "predictions": [{"label": "unknown", "prob": 0.9632157683372498}], "true_labels": ["unknown"], "hit": true}
+  {"text": "提醒我明天交电费", "predictions": [{"label": "reminder", "prob": 0.9632157683372498}], "true_labels": ["reminder"], "hit": true}
   ```
 
   待预测文件本身带 `__label__` 时，会自动把真实标签写进 `true_labels` 并给出 `hit`（是否命中），
@@ -742,9 +743,9 @@ requirements.txt                   依赖
 README.md                          本文件
 data/needle/chinese_tool_cases.json  Needle 中文工具调用人工用例（27 条）
 data/labeling/accounting_data.txt  示例数据-记账及资产账户类（`__label__accounting` 963 条）
-data/labeling/unknown_data.txt     示例数据-未知类（`__label__unknown` 995 条）
+data/labeling/unknown_data.txt     示例数据-未知类（`__label__unknown` 1024 条）
 data/labeling/reminder_data.txt    示例数据-提醒类（`__label__reminder` 464 条）
-data/labeling/todo_data.txt        示例数据-待办类（`__label__todo` 404 条）
+data/labeling/todo_data.txt        示例数据-待办类（`__label__todo` 420 条）
 data/annotations/mixed_intents.jsonl  跨意图多操作标注源数据（64 条，本文件不直接传给训练脚本）
 data/labeling/mixed_intents_data.txt  上述 JSONL 的多标签导出（64 行，默认目录训练会加载）
 data/probe/accounting_data.txt     独立留出测试集-记账及资产账户类（286 条，与训练集零重叠）
