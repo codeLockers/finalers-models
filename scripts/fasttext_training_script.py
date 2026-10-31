@@ -1037,7 +1037,8 @@ def scan_eval(model, eval_path: Path, k: int, threshold: float, max_failures=Non
     """逐条预测评估集, 统计成功/失败条数并收集判错的样本。
 
     成功 = 预测的前 k 个标签里命中了真实标签(单标签时就是"猜对了")。
-    失败明细最多收集 max_failures 条(None 表示不限制), 失败总数仍然精确统计。
+    失败明细最多收集 max_failures 条(None 表示不限制, 0 表示只统计不收集明细),
+    失败总数仍然精确统计。
     """
     total = 0
     correct = 0
@@ -1169,11 +1170,12 @@ def print_evaluation(
     eval_path: Path,
     is_multilabel: bool,
     note: str = "",
-    max_failures: int = 20,
+    max_failures: int = 0,
     show_metrics: bool = False,
 ) -> None:
     """打印评估结果: 先给条目数/成功率/失败率, 再逐条列出判错的样本。
 
+    max_failures <= 0 表示全部列出(默认), >0 时只列前 N 条并提示剩余条数。
     逐标签 P/R/F1 属于"细节", 默认不打印, 需要时加 --metrics。
     """
     total = result.get("judged_samples")
@@ -1198,7 +1200,7 @@ def print_evaluation(
             if len(shown) < result["failed"]:
                 log(
                     f"      ... 还有 {result['failed'] - len(shown)} 条失败未显示"
-                    "(用 --max-failures 0 查看全部)"
+                    "(用 --max-failures 0 或去掉该参数即可查看全部)"
                 )
     if note:
         log(f"[注意] {note}")
@@ -1463,9 +1465,9 @@ def parse_args(argv=None) -> argparse.Namespace:
     run.add_argument(
         "--max-failures",
         type=int,
-        default=20,
+        default=0,
         metavar="N",
-        help="评估结果里最多列出多少条失败样本(默认 20, 0 表示全部列出)",
+        help="评估结果里最多列出多少条失败样本(默认 0 = 全部列出, 给正数则只列前 N 条)",
     )
     run.add_argument(
         "--metrics",

@@ -344,7 +344,7 @@ python3 scripts/fasttext_training_script.py -m models/intent.bin --quantize -t d
 | `--quantize` / `--quantize-dsub` | 乘积量化（PQ）压缩模型：训练后压缩再落盘，或配合 `-m` 把已有 `.bin` 量化导出 `.ftz`；体积/内存约降到 `1/(dim/dsub+1)`（默认 `dsub=2`，dim=100 时约 1/8）。`-o` 以 `.ftz` 结尾时会自动打开 |
 | `--quantize-qnorm` / `--quantize-retrain` | 归一化后再量化 / 量化后微调一轮（实测本示例数据都无收益，默认关闭） |
 | `-k/--k` / `--threshold` | 评估与预测时取前 k 个 / 概率阈值 |
-| `--metrics` / `--max-failures` | 评估输出：`--metrics` 额外打印 P/R/F1 与每标签指标；`--max-failures N` 控制失败样本最多列多少条（默认 20，0 = 全部） |
+| `--metrics` / `--max-failures` | 评估输出：`--metrics` 额外打印 P/R/F1 与每标签指标；`--max-failures N` 控制失败样本最多列多少条（默认 0 = 全部列出，给正数则只列前 N 条） |
 | `--predict --predict-file -I/--interactive` | 推理方式（可组合） |
 | `--work-dir --keep-work-dir` | 切分中间文件目录（默认临时目录，结束自动清理） |
 | `--dry-run` / `--check-env` | 只演练数据流程 / 只体检环境 |
@@ -700,8 +700,8 @@ v4 在原来 1842 条训练数据上的历史结果为 **499/499**，本轮新�
         预测: unknown(0.5497)
   ```
 
-  成功 = 预测标签命中真实标签（单标签、`k=1` 时就是「猜对」）。失败样本默认最多列 20 条，
-  超出会提示还有多少条未显示；要一次看全部用 `--max-failures 0`。
+  成功 = 预测标签命中真实标签（单标签、`k=1` 时就是「猜对」）。失败样本默认**全部列出**，
+  想只看前 N 条可加 `--max-failures N`（超出会提示还有多少条未显示）。
   需要 P/R/F1 与每标签指标（判断是「漏报」还是「误报」）时加 `--metrics`。
 
 * **日志全部走 stderr**；`--predict-file` 的 JSONL 结果走 **stdout**，可以直接 `> preds.jsonl`
