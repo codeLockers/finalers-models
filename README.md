@@ -185,20 +185,24 @@ __label__unknown 明天上午十点提醒我开会
 
 | 文件 | 标签 | 含义 | 条数 |
 | --- | --- | --- | --- |
-| `accounting_data.txt` | `__label__accounting` | 记录/陈述已发生的收支，或查询/管理资产与负债账户 | 859 |
-| `unknown_data.txt` | `__label__unknown` | 未知（其余全部兜底到这一类） | 983 |
+| `accounting_data.txt` | `__label__accounting` | 记录/陈述已发生的收支，或查询/管理资产与负债账户 | 939 |
+| `unknown_data.txt` | `__label__unknown` | 未知（其余全部兜底到这一类） | 1063 |
 
-两个文件合计 **1842 条、2 个标签**，每行都保留 `__label__` 前缀（拆分文件本身就是合法的 fastText
+两个文件合计 **2002 条、2 个标签**，每行都保留 `__label__` 前缀（拆分文件本身就是合法的 fastText
 数据），也可以只取其中一个文件训练单类别模型。标签名刻意用英文，避免中文标签在代码 / JSON / 日志里
 出现编码与转义问题。数据是**按「说法覆盖维度」铺出来的**（不是按条数堆），判定规则、边界约定、
 覆盖矩阵和实测指标都写在 [`data/LABELING.md`](data/LABELING.md)。
 
-新增的 [`data/labeling/reminder_data.text`](data/labeling/reminder_data.text) 包含 **320 条**
+新增的 [`data/labeling/reminder_data.text`](data/labeling/reminder_data.text) 包含 **400 条**
 `__label__reminder` 待接入语料，覆盖提醒创建、查询、修改、取消和周期/条件触发等说法。
-[`data/labeling/todo_data.text`](data/labeling/todo_data.text) 另含 **320 条** `__label__todo` 待接入语料，
+[`data/labeling/todo_data.text`](data/labeling/todo_data.text) 另含 **400 条** `__label__todo` 待接入语料，
 覆盖待办创建、查询、修改、完成、删除、清单管理和多个待办；截止时间与提醒通知分开标注。
 目录模式只读取 `*.txt`，这些 `.text` 尚未参与默认训练；正式接入前需统一扩展名，并迁移现有训练及留出集中
-仍标为 `unknown` 的提醒和待办样本。当前二分类的数量、规则和历史评估仍按原数据口径保留。
+仍标为 `unknown` 的提醒和待办样本。
+
+本轮四个文件各追加 **80 条同类别多操作样本**，共新增 **320 条**，四份语料合计 **2802 条**。
+每句包含两到四项同类别操作，标签只写一次，覆盖后项省略动词、多时间、多对象和不同标点写法；
+尚未训练，后文模型分数仍是 1842 条训练数据的历史评估，新增样本的标注边界见 [`data/LABELING.md`](data/LABELING.md)。
 
 ### 按标签拆分数据
 
@@ -229,8 +233,8 @@ python3 scripts/fasttext_training_script.py -i data/labeling -t data/probe -o /t
 改名和归档等均属于 `accounting`。同时修正了旧数据中 21 条余额/额度/账户查询负例。
 随后又针对 16 个线上 badcase（账户余额/额度/净资产/账户列表查询，以及算数、充值、免息期、
 转账/还款、银行办理、消费统计）补齐成对边界样本，训练集扩到 **1842 条**（accounting 859 /
-unknown 983），端侧模型已用当前数据重训，在 499 条独立留出集上 **499/499**。下文同时保留
-v2、v3 的历史结果，当前 v4 指标见下文「v4（1842 条）实测」。
+unknown 983），端侧模型已用当时数据重训，在 499 条独立留出集上 **499/499**。下文保留
+v2、v3、v4 的历史结果，v4 指标见下文「v4（1842 条）实测」。
 
 > 这是一份**二分类**示例：收支记录及资产账户查询/管理标 `__label__accounting`，其余标 `__label__unknown`。
 > 消费统计、账单明细、提醒、实际支付/转账、注册登录账号及实体卡办理等仍属于 `unknown`，边界见标注规范。
@@ -241,7 +245,7 @@ v2、v3 的历史结果，当前 v4 指标见下文「v4（1842 条）实测」�
 >     data/labeling/*_data.txt
 > ```
 >
-> 当前训练集正负样本约 1:1.14（v1 是 1:4），评估时重点看 `accounting` 的 P/R，不要只看整体准确率
+> 当前训练集正负样本约 1:1.13（v1 是 1:4），评估时重点看 `accounting` 的 P/R，不要只看整体准确率
 > （全判 unknown 也有约 0.53）。
 
 > **常见疑问：没命中的不就是 unknown 吗？为什么还要给 unknown 训练数据？**
@@ -351,7 +355,7 @@ bucket 只决定**哈希碰撞概率**，而碰撞取决于「语料里出现过
 | 1 / 6 | 15988 | 32% |
 
 下表是 v2（631 条训练；留出集 60 条）的历史扫描，用来比较 dim/bucket 的相对趋势；v3 的生产配置
-复测见下文「v3（1441 条）历史实测」，当前 v4（1842 条训练 / 499 条留出）见「v4（1842 条）实测」：
+复测见下文「v3（1441 条）历史实测」，历史 v4（1842 条训练 / 499 条留出）见「v4（1842 条）实测」：
 
 | dim / bucket | 体积 | 留出集 P@1 | 8:2 5-seed 均值 | 单 seed 范围 |
 | --- | --- | --- | --- | --- |
@@ -386,7 +390,7 @@ bucket 的下限（固定 dim=20）：
 #### 再进一步：乘积量化 `--quantize`（约 1/8，实测无损）
 
 > 下面两张压缩表基于 v2（60 条留出集）；v3 的历史复测见下文「v3（1441 条）历史实测」，
-> 当前 v4（1842 条训练 / 499 条留出）的 `dim 20 / bucket 50000 / quantize` 体积约 **0.56 MB**，
+> 历史 v4（1842 条训练 / 499 条留出）的 `dim 20 / bucket 50000 / quantize` 体积约 **0.56 MB**，
 > 留出集 499/499，见「v4（1842 条）实测」。
 
 脚本新增 `--quantize`：把每个 subvector 压成 1 字节（乘积量化），体积公式（实测吻合）
@@ -559,7 +563,7 @@ python3 scripts/fasttext_training_script.py -m models/intent.bin -o models/inten
 原因：中文不分词时整句只是一个 token，判别信息全在字符 n-gram 里；`--min-n 3` 会丢掉「花」「元」
 「块」这类**单字/双字线索**，正类样本又少，模型容易退化成「全判 unknown」。所以脚本默认改成了
 `--min-n 1 --max-n 3`（要恢复旧行为就显式传 `--min-n 3 --max-n 6`）。
-注意 v1 的 60 条数据里 `accounting` 只有 12 条，任何指标都波动很大（当前已扩到 859 条，见 §2 数据格式）。
+注意 v1 的 60 条数据里 `accounting` 只有 12 条，任何指标都波动很大（当前已扩到 939 条，见 §2 数据格式）。
 
 #### 数据量：每类要多少条（实测）
 
@@ -627,7 +631,7 @@ python3 scripts/fasttext_training_script.py -m models/intent.bin -o models/inten
 结论与做法：
 
 * 初期参考规模：正样本 **100~200 条**，unknown 类 **300~500 条**（它要覆盖「其余全部」），
-  并留一份独立测试集（别用同一份数据既调参又报指标）。当前示例数据已扩到 **859 / 983 条**，
+  并留一份独立测试集（别用同一份数据既调参又报指标）。当前二分类示例数据已扩到 **939 / 1063 条**，
   并配了独立留出集 `data/probe`。
 * 扩数据按**说法维度**补，不是按条数补：谁花的（我/孩子/公司）、金额写法（`30` / `30元` /
   `32.5` / `1,200` / `三百`）、动词（花/买/交/付/充/订/到账/支出）、口语 vs 书面、是否带时间词。
@@ -642,9 +646,9 @@ python3 scripts/fasttext_training_script.py -m models/intent.bin -o models/inten
 
 * `--thread > 1` 时 fastText 是**异步 SGD**：即使固定 `--seed`，多次训练指标也会有波动（线程越多
   越明显，模型参数本身也不一致）。要完全可复现请用 `--thread 1`。
-* 当前正负样本约 1:1.14，不要只看整体准确率（全判 `unknown` 就有约 0.53），重点看 `accounting` 的
+* 当前正负样本约 1:1.13，不要只看整体准确率（全判 `unknown` 就有约 0.53），重点看 `accounting` 的
   P/R（加 `--metrics` 就能看到脚本打印的「每标签指标」）。
-* 指标波动大时优先补数据（每个标签几百条起步）；示例数据已扩到 1842 条，
+* 指标波动大时优先补数据（每个标签几百条起步）；默认目录读取的二分类数据已扩到 2002 条，
   请用 `-t` 独立留出集评估新数据的效果；旧版指标中的波动幅度仅供参考。
 
 ### 用留出集自评（推荐）
@@ -653,7 +657,8 @@ python3 scripts/fasttext_training_script.py -m models/intent.bin -o models/inten
 python3 scripts/fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin
 ```
 
-这条命令会用**全部 1842 条**训练、在**从未参与训练的 499 条**上评估；当前 v4 结果为 **499/499**。
+这条命令会用**全部 2002 条 `.txt` 数据**训练，在 **499 条留出样本**上评估；`.text` 语料尚未自动加载。
+v4 在原来 1842 条训练数据上的历史结果为 **499/499**，本轮新增数据尚未训练评估。
 `--report` 里也会把 `data.test` / `data.test_stats` 一起写进 JSON。
 
 ## 5. 输出说明
@@ -712,8 +717,10 @@ tests/test_asset_account_conversion.py  资产账户构造、内存增删改查�
 requirements.txt                   依赖
 README.md                          本文件
 data/needle/chinese_tool_cases.json  Needle 中文工具调用人工用例（27 条）
-data/labeling/accounting_data.txt  示例数据-记账及资产账户类（`__label__accounting` 859 条）
-data/labeling/unknown_data.txt     示例数据-未知类（`__label__unknown` 983 条）
+data/labeling/accounting_data.txt  示例数据-记账及资产账户类（`__label__accounting` 939 条）
+data/labeling/unknown_data.txt     示例数据-未知类（`__label__unknown` 1063 条）
+data/labeling/reminder_data.text   待接入语料-提醒类（`__label__reminder` 400 条）
+data/labeling/todo_data.text       待接入语料-待办类（`__label__todo` 400 条）
 data/probe/accounting_data.txt     独立留出测试集-记账及资产账户类（206 条，与训练集零重叠）
 data/probe/unknown_data.txt        独立留出测试集-未知类（293 条，与训练集零重叠；`-t data/probe` 合并评估）
 data/LABELING.md                   标注规范：判定顺序、边界约定、覆盖维度、实测指标
