@@ -193,6 +193,13 @@ __label__unknown 明天上午十点提醒我开会
 出现编码与转义问题。数据是**按「说法覆盖维度」铺出来的**（不是按条数堆），判定规则、边界约定、
 覆盖矩阵和实测指标都写在 [`data/LABELING.md`](data/LABELING.md)。
 
+新增的 [`data/labeling/reminder_data.text`](data/labeling/reminder_data.text) 包含 **320 条**
+`__label__reminder` 待接入语料，覆盖提醒创建、查询、修改、取消和周期/条件触发等说法。
+[`data/labeling/todo_data.text`](data/labeling/todo_data.text) 另含 **320 条** `__label__todo` 待接入语料，
+覆盖待办创建、查询、修改、完成、删除、清单管理和多个待办；截止时间与提醒通知分开标注。
+目录模式只读取 `*.txt`，这些 `.text` 尚未参与默认训练；正式接入前需统一扩展名，并迁移现有训练及留出集中
+仍标为 `unknown` 的提醒和待办样本。当前二分类的数量、规则和历史评估仍按原数据口径保留。
+
 ### 按标签拆分数据
 
 手上有完整的一份数据时，用 `--split-by-label` 按标签拆成多个文件（对已经拆好的目录再拆一次是幂等的）：
