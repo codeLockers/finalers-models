@@ -360,3 +360,5 @@ __label__unknown 给同事发一个三百元的红包
 __label__unknown 后天晚上八点参加线上讲座
 __label__unknown 现在把微信余额转到银行卡里
 __label__unknown 这笔网购我想申请退款
+__label__unknown 现在从微信转三百元到我的储蓄卡
+__label__unknown 请说明如何创建资产账户并把账本导出为表格

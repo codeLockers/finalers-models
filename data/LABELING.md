@@ -8,8 +8,8 @@
 
 | 文件 | 用途 | 规模 |
 | --- | --- | --- |
-| `labeling/*.txt` | 训练 + 调参（`-i data/labeling` 合并读取） | **3061 行**：`asset_account_data.txt` 301 / `bill_data.txt` 751 / `unknown_data.txt` 1057 / `reminder_data.txt` 464 / `todo_data.txt` 420 / `mixed_intents_data.txt` 68 |
-| `probe/*.txt` | 独立留出测试集（`-t data/probe` 合并读取） | **920 行**：`asset_account_data.txt` 156 / `bill_data.txt` 172 / `unknown_data.txt` 362 / `reminder_data.txt` 106 / `todo_data.txt` 80 / `mixed_intents_data.txt` 44 |
+| `labeling/*.txt` | 训练 + 调参（`-i data/labeling` 合并读取） | **3071 行**：`asset_account_data.txt` 301 / `bill_data.txt` 751 / `unknown_data.txt` 1067 / `reminder_data.txt` 464 / `todo_data.txt` 420 / `mixed_intents_data.txt` 68 |
+| `probe/*.txt` | 独立留出测试集（`-t data/probe` 合并读取） | **922 行**：`asset_account_data.txt` 156 / `bill_data.txt` 172 / `unknown_data.txt` 364 / `reminder_data.txt` 106 / `todo_data.txt` 80 / `mixed_intents_data.txt` 44 |
 
 `asset_account_data.txt` 的单标签样本覆盖账户余额/额度/欠款查询，账户创建、删除、更新余额、改名、备注、类型、默认标记、尾号、归档、恢复和账户列表查询；覆盖现金、微信、支付宝、银行卡、信用卡、花呗、贷款、医保、公积金、投资等账户。
 
@@ -17,9 +17,9 @@
 
 `unknown_data.txt` 仍保留收支统计、账单明细/支付状态查询、实际支付/转账/充值/还款动作、方法咨询、算数和其它未覆盖请求。咨询“如何创建资产账户”不等于立即执行账户创建；费用余额也不等于资产账户余额。
 
-当前目录读取 `*.txt`，五份单标签语料和一份混合语料会自动加载，共五类标签：`asset_account`、`bill`、`unknown`、`reminder`、`todo`。单标签行共 **2993**，混合行 **68**；混合行中的标签计数为 `asset_account` 32、`bill` 20、`reminder` 53、`todo` 45。
+当前目录读取 `*.txt`，五份单标签语料和一份混合语料会自动加载，共五类标签：`asset_account`、`bill`、`unknown`、`reminder`、`todo`。单标签行共 **3003**，混合行 **68**；混合行中的标签计数为 `asset_account` 32、`bill` 20、`reminder` 53、`todo` 45。
 
-`data/probe/` 与训练文本规范化后零重叠，共 **920 行**；其中单标签 876 行，跨意图 44 行。新增数据后应先运行格式、重复和跨集合重叠检查，再进行训练或评估。
+`data/probe/` 与训练文本规范化后零重叠，共 **922 行**；其中单标签 878 行，跨意图 44 行。新增数据后应先运行格式、重复和跨集合重叠检查，再进行训练或评估。
 
 跨意图标注源数据位于 [`annotations/mixed_intents.jsonl`](annotations/mixed_intents.jsonl)，共 **68 条**；运行 `make export-mixed-intents` 默认导出到 [`labeling/mixed_intents_data.txt`](labeling/mixed_intents_data.txt)。导出脚本按 `asset_account`、`bill`、`reminder`、`todo` 的固定顺序写出全部标签。
 

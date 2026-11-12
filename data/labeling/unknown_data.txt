@@ -1055,3 +1055,13 @@ __label__unknown 请帮我把这次购物退掉
 __label__unknown 这笔订单可以申请退货退款吗
 __label__unknown 我想把刚买的商品退款
 __label__unknown 申请把这笔餐费退回来
+__label__unknown 现在把支付宝里的八百元转到工行卡
+__label__unknown 请立即从支付宝余额转八百元到工商银行卡
+__label__unknown 帮我把微信里的五百元转到另一张银行卡
+__label__unknown 现在从储蓄卡转三百元到我的支付宝
+__label__unknown 把银行卡的钱转到支付宝账户里
+__label__unknown 立刻把支付宝余额转入我的银行卡
+__label__unknown 教我怎么在记账软件里创建资产账户
+__label__unknown 如何新建资产账户并导出账本表格
+__label__unknown 告诉我创建资产账户后导出数据的步骤
+__label__unknown 记账软件中新建资产账户后怎么导出成表格
