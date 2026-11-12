@@ -1071,3 +1071,15 @@ __label__unknown 教我怎么在记账软件里创建资产账户
 __label__unknown 如何新建资产账户并导出账本表格
 __label__unknown 告诉我创建资产账户后导出数据的步骤
 __label__unknown 记账软件中新建资产账户后怎么导出成表格
+__label__unknown 去建设银行柜台开储蓄卡要带哪些证件
+__label__unknown 现场办理银行卡开户需要准备什么材料
+__label__unknown 到银行开个人账户要带身份证和哪些资料
+__label__unknown 中国银行柜台开户的证件要求是什么
+__label__unknown 办理借记卡现场需要携带哪些身份证明
+__label__unknown 请问银行开卡时要准备哪些证明文件
+__label__unknown 现在把微信零钱转到银行卡
+__label__unknown 请把微信钱包余额转入工行卡
+__label__unknown 立即从微信钱包转五百元到储蓄卡
+__label__unknown 帮我把零钱转入绑定的银行卡
+__label__unknown 把微信里的余额提现到银行卡
+__label__unknown 立刻将微信余额转给我的银行卡
