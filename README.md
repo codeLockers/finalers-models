@@ -187,12 +187,12 @@ __label__unknown 明天会下雨吗
 | --- | --- | --- | --- |
 | `asset_account_data.txt` | `__label__asset_account` | 记账本资产/负债账户的创建、查询、更新、改名、归档、恢复和删除 | 301 |
 | `bill_data.txt` | `__label__bill` | 记录已经发生的收入、支出、退款、报销和还款等账单 | 751 |
-| `unknown_data.txt` | `__label__unknown` | 尚未覆盖到专门类别的兜底意图 | 1067 |
+| `unknown_data.txt` | `__label__unknown` | 尚未覆盖到专门类别的兜底意图 | 1073 |
 | `reminder_data.txt` | `__label__reminder` | 创建、查询、修改和取消提醒 | 464 |
 | `todo_data.txt` | `__label__todo` | 创建、查询、修改和管理待办事项 | 420 |
 | `mixed_intents_data.txt` | `asset_account` / `bill` / `reminder` / `todo` 的多标签组合 | 同一句包含多个不同意图 | 68 |
 
-五个单标签文件合计 **3003 条**，加上 68 条混合语料后，默认目录读取 **3071 行、5 个标签**。单标签条数分别为 `asset_account` 301、`bill` 751、`unknown` 1067、`reminder` 464、`todo` 420；混合行中的标签会分别计数。旧的宽泛 `accounting` 文件已拆除，当前训练数据只生成 `asset_account` 和 `bill` 两个记账相关标签。
+五个单标签文件合计 **3009 条**，加上 68 条混合语料后，默认目录读取 **3077 行、5 个标签**。单标签条数分别为 `asset_account` 301、`bill` 751、`unknown` 1073、`reminder` 464、`todo` 420；混合行中的标签会分别计数。旧的宽泛 `accounting` 文件已拆除，当前训练数据只生成 `asset_account` 和 `bill` 两个记账相关标签。
 
 `asset_account_data.txt` 覆盖现金、微信、支付宝、银行卡、信用卡、花呗、贷款、医保、公积金和投资等账户的增删改查；`bill_data.txt` 覆盖早餐、餐饮、交通、购物、住房、水电、医疗、教育、宠物、娱乐、收入、退款、报销、还款、中文数字金额和多笔记录。比如“今天吃早饭花了50元”属于 `bill`，“创建一个支付宝账户”属于 `asset_account`。
 
@@ -206,7 +206,7 @@ make export-mixed-intents MIXED_INPUT=data/annotations/mixed_intents.jsonl MIXED
 
 导出只使用 Python 标准库，不加载 fastText，也不触发训练；JSONL 是标注源数据，68 条源样本对应 68 行导出，不重复计入语料数量。导出顺序为 `asset_account`、`bill`、`reminder`、`todo`；脚本仍兼容旧输入中的 `accounting` 标签，但当前源数据不再生成它。格式、输出示例和校验规则见 [`data/annotations/README.md`](data/annotations/README.md)。
 
-另外带一份**独立留出测试集** `data/probe/`（当前 **922 条** = asset_account 156 / bill 172 / unknown 364 / reminder 106 / todo 80 / 混合多标签 44）。它为 `data/labeling/` 当前加载的每个 `.txt` 训练文件提供对应测试文件，刻意与训练集**零重叠**，用来量「换说法的泛化」：
+另外带一份**独立留出测试集** `data/probe/`（当前 **924 条** = asset_account 156 / bill 172 / unknown 366 / reminder 106 / todo 80 / 混合多标签 44）。它为 `data/labeling/` 当前加载的每个 `.txt` 训练文件提供对应测试文件，刻意与训练集**零重叠**，用来量「换说法的泛化」：
 
 ```bash
 python3 scripts/fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin --loss ova
@@ -627,8 +627,8 @@ python3 scripts/fasttext_training_script.py -m models/intent.bin -o models/inten
 结论与做法：
 
 * 初期参考规模：正样本 **100~200 条**，unknown 类 **300~500 条**（它要覆盖「其余全部」），
-  并留一份独立测试集（别用同一份数据既调参又报指标）。当前五个单标签文件共 **3003 条**，
-  并配了 **922 条**独立留出集 `data/probe`。
+  并留一份独立测试集（别用同一份数据既调参又报指标）。当前五个单标签文件共 **3009 条**，
+  并配了 **924 条**独立留出集 `data/probe`。
 * 扩数据按**说法维度**补，不是按条数补：谁花的（我/孩子/公司）、金额写法（`30` / `30元` /
   `32.5` / `1,200` / `三百`）、动词（花/买/交/付/充/订/到账/支出）、口语 vs 书面、是否带时间词。
 * **优先补边界样本**：含金额或数字但不记账的句子——查询「这个月一共花了多少钱」、
@@ -644,7 +644,7 @@ python3 scripts/fasttext_training_script.py -m models/intent.bin -o models/inten
   越明显，模型参数本身也不一致）。要完全可复现请用 `--thread 1`。
 * 历史二分类数据的正负样本约 1:1.13；当前已扩展为五个标签，不要只看整体准确率，使用 `--metrics` 查看每个标签的
   P/R/F1。
-* 指标波动大时优先补数据（每个标签几百条起步）；默认目录读取 3071 条，含 68 条多标签语料，
+* 指标波动大时优先补数据（每个标签几百条起步）；默认目录读取 3077 条，含 68 条多标签语料，
   请用 `-t` 独立留出集评估新数据的效果；旧版指标中的波动幅度仅供参考。
 
 ### 用留出集自评（推荐）
@@ -653,7 +653,7 @@ python3 scripts/fasttext_training_script.py -m models/intent.bin -o models/inten
 python3 scripts/fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin --loss ova
 ```
 
-这条命令会用**全部 3071 条 `.txt` 数据**训练，在当前 **922 条留出样本**上评估；提醒和待办语料已自动加载。
+这条命令会用**全部 3077 条 `.txt` 数据**训练，在当前 **924 条留出样本**上评估；提醒和待办语料已自动加载。
 提醒和待办的留出样本已补齐，训练后应重点查看各标签的召回率及混合样本的多标签命中情况。
 v4 在原来 1842 条训练数据上的历史结果为 **499/499**，本轮新增数据尚未训练评估。
 `--report` 里也会把 `data.test` / `data.test_stats` 一起写进 JSON。
@@ -699,7 +699,7 @@ v4 在原来 1842 条训练数据上的历史结果为 **499/499**，本轮新�
   （`size_before_mb/size_after_mb/ratio/saved_mb`）与 `verification`
   （`is_quantized/vocab_size_same/labels_same/prediction_agreement`，有评估集时还有前后指标与 `precision_delta`）。
 * 评估集给**目录**（如 `data/probe`）时，脚本会先把目录内 `*.txt` 按文件名排序合并成临时文件再交给
-  fastText（当前数据合并为 922 条、6 个文件），结束后自动清理。
+  fastText（当前数据合并为 924 条、6 个文件），结束后自动清理。
 * **多标签数据**会自动检测并用 `loss=ova` 提示；单标签数据在 `--metrics` 里会说明 `P@1 即 accuracy`。
 * 切分时若某个标签样本太少，会打印实际切分比例与目标比例的偏差提醒。
 * autotune 时若验证集同时用于选超参数，会提示指标偏乐观，建议另给 `--test`。
@@ -717,14 +717,14 @@ README.md                          本文件
 data/needle/chinese_tool_cases.json  Needle 中文工具调用人工用例（27 条）
 data/labeling/asset_account_data.txt  示例数据-资产/负债账户增删改查类（`__label__asset_account` 301 条）
 data/labeling/bill_data.txt           示例数据-已发生账单记录类（`__label__bill` 751 条）
-data/labeling/unknown_data.txt     示例数据-未知类（`__label__unknown` 1067 条）
+data/labeling/unknown_data.txt     示例数据-未知类（`__label__unknown` 1073 条）
 data/labeling/reminder_data.txt    示例数据-提醒类（`__label__reminder` 464 条）
 data/labeling/todo_data.txt        示例数据-待办类（`__label__todo` 420 条）
 data/annotations/mixed_intents.jsonl  跨意图多操作标注源数据（68 条，本文件不直接传给训练脚本）
 data/labeling/mixed_intents_data.txt  上述 JSONL 的多标签导出（68 行，默认目录训练会加载）
 data/probe/asset_account_data.txt  资产/负债账户独立留出测试集（156 条，与训练集零重叠）
 data/probe/bill_data.txt           已发生账单记录独立留出测试集（172 条，与训练集零重叠）
-data/probe/unknown_data.txt        独立留出测试集-未知类（364 条，与训练集零重叠）
+data/probe/unknown_data.txt        独立留出测试集-未知类（366 条，与训练集零重叠）
 data/probe/reminder_data.txt       提醒类独立留出测试集（106 条，与训练集零重叠）
 data/probe/todo_data.txt           待办类独立留出测试集（80 条，与训练集零重叠）
 data/probe/mixed_intents_data.txt  跨意图多标签独立留出测试集（44 条，与训练集零重叠；`-t data/probe` 合并评估）

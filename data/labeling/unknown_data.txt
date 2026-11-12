@@ -1031,6 +1031,12 @@ __label__unknown 如何在账本里修改早餐这笔记账金额
 __label__unknown 为什么微信余额和账本数字不一致
 __label__unknown 查一下燃气费账户还有多少余额
 __label__unknown 信用卡账单哪天生成
+__label__unknown 信用卡免息期从哪天开始算
+__label__unknown 这张卡最长免息多少天
+__label__unknown 信用卡账单日和免息期怎么计算
+__label__unknown 信用卡消费什么时候开始计息
+__label__unknown 免息期和还款日有什么关系
+__label__unknown 如何查询信用卡免息期
 __label__unknown 上次退款预计什么时候到账
 __label__unknown 统计一下本月早餐支出
 __label__unknown 把这笔消费申请退款
