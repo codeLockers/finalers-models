@@ -1022,3 +1022,15 @@ __label__unknown 我想申请增加招商银行信用卡的授信额度
 __label__unknown 信用卡申请临时提额需要哪些材料
 __label__unknown 请银行提高这张信用卡的可用额度
 __label__unknown 申请把信用卡额度从三万提高到五万
+__label__unknown 今天早饭一共花了多少钱
+__label__unknown 帮我查今天早饭那笔支出的金额
+__label__unknown 帮我把早餐这笔账单支付掉
+__label__unknown 明天帮我支付早饭账单50元
+__label__unknown 请把支付宝余额转到银行卡
+__label__unknown 如何在账本里修改早餐这笔记账金额
+__label__unknown 为什么微信余额和账本数字不一致
+__label__unknown 查一下燃气费账户还有多少余额
+__label__unknown 信用卡账单哪天生成
+__label__unknown 上次退款预计什么时候到账
+__label__unknown 统计一下本月早餐支出
+__label__unknown 把这笔消费申请退款

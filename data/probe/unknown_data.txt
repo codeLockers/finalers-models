@@ -345,3 +345,13 @@ __label__unknown 教我找回误删的账单，再教我修改导入的日期
 __label__unknown 怎么关闭消息通知，再怎么清理应用缓存
 __label__unknown 说说账户余额为何会和银行记录不一致，再给排查步骤
 __label__unknown 查一下这份合同的生效日期，再说明提前解约的条件
+__label__unknown 今天早饭总共花了多少
+__label__unknown 这笔早餐消费的具体金额是多少
+__label__unknown 帮我支付这张早餐账单
+__label__unknown 请把微信零钱转出到绑定的银行卡
+__label__unknown 为什么账本的现金余额和实际对不上
+__label__unknown 燃气费账户余额怎么查看
+__label__unknown 信用卡账单日是哪一天
+__label__unknown 这笔退款什么时候能到账
+__label__unknown 统计本周的午餐开支
+__label__unknown 这笔购物消费想申请退回款项

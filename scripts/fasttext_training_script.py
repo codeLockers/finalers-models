@@ -48,8 +48,8 @@
       --predict-file data/probe
 
 数据格式(fastText 监督分类标准格式, 每行一条):
-  __label__accounting 午饭花了30块
-  __label__unknown 提醒我明天交电费
+  __label__bill 午饭花了30块
+  __label__reminder 提醒我明天交电费
   __label__a __label__b 一行也可以带多个标签        <-- 多标签样本
 """
 
