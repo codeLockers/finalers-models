@@ -366,3 +366,11 @@ __label__unknown 现在从微信转三百元到我的储蓄卡
 __label__unknown 请说明如何创建资产账户并把账本导出为表格
 __label__unknown 中国建设银行现场办借记卡要准备哪些资料
 __label__unknown 立即把微信钱包余额转进我名下的银行卡
+__label__unknown 去工行网点申请借记卡要带哪些证件
+__label__unknown 现场办储蓄卡需要准备身份证和什么材料
+__label__unknown 到银行柜面开个人借记卡需要哪些资料
+__label__unknown 去建行营业厅办理银行卡要带什么证明文件
+__label__unknown 去建设银行线下开借记卡要准备哪些身份证明
+__label__unknown 建行网点现场申请储蓄卡需要带什么材料
+__label__unknown 想在银行柜台办实体银行卡，资料要求是什么
+__label__unknown 到建行营业厅开户办卡前要准备哪些文件
