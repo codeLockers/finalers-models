@@ -355,3 +355,8 @@ __label__unknown 信用卡账单日是哪一天
 __label__unknown 这笔退款什么时候能到账
 __label__unknown 统计本周的午餐开支
 __label__unknown 这笔购物消费想申请退回款项
+__label__unknown 把前台王姐的固定电话保存下来
+__label__unknown 给同事发一个三百元的红包
+__label__unknown 后天晚上八点参加线上讲座
+__label__unknown 现在把微信余额转到银行卡里
+__label__unknown 这笔网购我想申请退款
