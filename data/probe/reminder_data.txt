@@ -104,3 +104,5 @@ __label__reminder 明早九点提醒我开会
 __label__reminder 设置一个二十分钟的闹钟
 __label__reminder 明早九点提醒我检查支付宝余额
 __label__reminder 周末通知我到银行办理新账户
+__label__reminder 取消已经设置的领药通知，不要再提醒我了
+__label__reminder 不用加入任务清单，只在周四上午提醒我预约检查

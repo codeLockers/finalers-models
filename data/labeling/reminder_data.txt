@@ -462,3 +462,15 @@ __label__reminder 周末通知我去银行办理新账户
 __label__reminder 周六通知我到银行开新账户
 __label__reminder 通知我明天去银行办卡
 __label__reminder 提醒我报销680块
+__label__reminder 取消昨天设置的复诊提醒，之后不要再通知我
+__label__reminder 把已经存在的取药提醒关闭，不用再提醒
+__label__reminder 不创建待办，只设一个明天上午预约医生的提醒
+__label__reminder 不用加进清单，周五下午提醒我领取体检报告就行
+__label__reminder 不用放入待办清单，明天下午提醒我去预约门诊
+__label__reminder 别创建任务，只需要在周三早上提醒我取检查报告
+__label__reminder 给我设个领药提醒，不要加入健康清单
+__label__reminder 只设置明天复查的提醒，不用记录待办事项
+__label__reminder 不用加入任务清单，只在明天早上提醒我挂号
+__label__reminder 不用加入待办列表，只在周二下午通知我拿药
+__label__reminder 先不要创建任务清单，明早九点提醒我联系医生
+__label__reminder 别写进健康待办，只在周末提醒我去复查

@@ -177,6 +177,7 @@ $(MOBILE): $(MODEL) $(HOLDOUT_FILES)
 	@mkdir -p $(@D)
 	$(QUANTIZE)
 
+# make mobile-train PYTHON=.venv/bin/python
 mobile-train: ## 从原始数据一步训练+量化端侧模型（dim=20, bucket=50000, thread=1）
 	@mkdir -p $(MODEL_DIR)
 	@echo ">> 训练+量化 $(MOBILE)  (dim=$(MOBILE_DIM), bucket=$(MOBILE_BUCKET), thread=$(MOBILE_THREAD))"

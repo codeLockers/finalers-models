@@ -299,3 +299,7 @@ __label__asset_account 给账户补充备注“仅限旅行使用”
 __label__asset_account 移除资产账户的银行卡尾号信息
 __label__asset_account 把工资卡设成唯一默认账户
 __label__asset_account 恢复被隐藏的支付宝账户并显示在列表中
+__label__asset_account 中行卡里还剩多少钱
+__label__asset_account 我的中国银行卡里现在有几块
+__label__asset_account 招行卡上还剩多少块钱
+__label__asset_account 告诉我建行储蓄卡还剩几块

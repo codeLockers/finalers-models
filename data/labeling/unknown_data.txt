@@ -1104,3 +1104,17 @@ __label__unknown 银行柜面开储蓄卡需要提交哪些身份证明文件
 __label__unknown 请问建行线下开卡需要携带什么材料
 __label__unknown 我要到建设银行网点办卡，先咨询一下证件要求
 __label__unknown 办理个人借记卡的现场开户资料有哪些
+__label__unknown 星期天去参加同事婚礼
+__label__unknown 下周六要参加亲戚婚宴
+__label__unknown 请教我新建资产账户的方法，再讲讲导出表格的操作步骤
+__label__unknown 教一下怎么创建账本账户，然后教一下如何导出电子表格
+__label__unknown 请说明在记账软件创建资产账户并导出表格的流程
+__label__unknown 介绍一下怎样新增账本账户以及如何导出账本数据
+__label__unknown 教我先建立记账账户，再把账本保存成电子表格
+__label__unknown 如何添加资产账户并将记录导出为Excel文件
+__label__unknown 把李主管的座机号码存下来
+__label__unknown 记一下赵经理的办公电话
+__label__unknown 原价两百元打八折是多少钱
+__label__unknown 一千元的商品打七折能省多少
+__label__unknown 家里应该留多少应急现金比较合适
+__label__unknown 手头保留多少备用现金才够应急
