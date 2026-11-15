@@ -186,18 +186,18 @@ __label__unknown 明天会下雨吗
 
 | 文件 | 标签 | 含义 | 条数 |
 | --- | --- | --- | --- |
-| `asset_account_data.txt` | `__label__asset_account_create` / `_query` / `_update` / `_delete` | 记账本资产/负债账户的创建、查询、更新和删除（含归档、隐藏、恢复） | 611 |
+| `asset_account_data.txt` | `__label__asset_account_create` / `_query` / `_update` / `_delete` | 记账本资产/负债账户的创建、查询、更新和删除（含归档、隐藏、恢复） | 667 |
 | `bill_data.txt` | `__label__bill` | 记录已经发生的收入、支出、退款、报销和还款等账单 | 751 |
-| `unknown_data.txt` | `__label__unknown` | 尚未覆盖到专门类别的兜底意图 | 1120 |
+| `unknown_data.txt` | `__label__unknown` | 尚未覆盖到专门类别的兜底意图 | 1190 |
 | `reminder_data.txt` | `__label__reminder` | 创建、查询、修改和取消提醒 | 476 |
-| `todo_data.txt` | `__label__todo` | 创建、查询、修改和管理待办事项 | 438 |
-| `mixed_intents_data.txt` | 四个 `asset_account_*` 标签与 `bill` / `reminder` / `todo` 的多标签组合 | 同一句包含多个不同意图 | 68 |
+| `todo_data.txt` | `__label__todo` | 创建、查询、修改和管理待办事项 | 442 |
+| `mixed_intents_data.txt` | 四个 `asset_account_*` 标签与 `bill` / `reminder` / `todo` 的多标签组合 | 同一句包含多个不同意图 | 81 |
 
-五个分类语料文件合计 **3396 行**（账户文件内另有 6 条同属账户 CRUD 的多标签组合，已包含在内），加上 68 条混合语料后，默认目录读取 **3464 行、8 个标签**。各标签出现次数分别为 `asset_account_create` 125、`asset_account_query` 218、`asset_account_update` 184、`asset_account_delete` 90、`bill` 751、`unknown` 1120、`reminder` 476、`todo` 438；混合行中的标签会分别计数。旧的宽泛 `accounting` 文件已拆除，当前训练数据生成四个账户 CRUD 标签和 `bill` 一个账单标签，共五个记账相关标签。
+五个分类语料文件合计 **3526 行**（账户文件内另有 6 条同属账户 CRUD 的多标签组合，已包含在内），加上 81 条混合语料后，默认目录读取 **3607 行、8 个标签**。各标签出现次数分别为 `asset_account_create` 147、`asset_account_query` 251、`asset_account_update` 218、`asset_account_delete` 103、`bill` 771、`unknown` 1190、`reminder` 539、`todo` 497；混合行中的标签会分别计数。旧的宽泛 `accounting` 文件已拆除，当前训练数据生成四个账户 CRUD 标签和 `bill` 一个账单标签，共五个记账相关标签。
 
 `asset_account_data.txt` 覆盖现金、微信、支付宝、银行卡、信用卡、花呗、贷款、医保、公积金和投资等账户，并按 `asset_account_create`（创建）、`asset_account_query`（查询）、`asset_account_update`（更新余额/名称/备注/类型/默认标记/恢复）、`asset_account_delete`（删除/移除/归档/隐藏）四个标签拆分；`bill_data.txt` 覆盖早餐、餐饮、交通、购物、住房、水电、医疗、教育、宠物、娱乐、收入、退款、报销、还款、中文数字金额和多笔记录。比如“今天吃早饭花了50元”属于 `bill`，“创建一个支付宝账户”属于 `asset_account_create`，“查询微信余额”属于 `asset_account_query`。
 
-跨意图多操作预备语料另存于 [`data/annotations/mixed_intents.jsonl`](data/annotations/mixed_intents.jsonl)，目前 **68 条**，通过独立命令导出全部意图标签，默认生成 `data/labeling/mixed_intents_data.txt`：
+跨意图多操作预备语料另存于 [`data/annotations/mixed_intents.jsonl`](data/annotations/mixed_intents.jsonl)，目前 **81 条**，通过独立命令导出全部意图标签，默认生成 `data/labeling/mixed_intents_data.txt`：
 
 ```bash
 make export-mixed-intents
@@ -205,7 +205,7 @@ make export-mixed-intents
 make export-mixed-intents MIXED_INPUT=data/annotations/mixed_intents.jsonl MIXED_OUTPUT=/tmp/mixed_intents.txt
 ```
 
-导出只使用 Python 标准库，不加载 fastText，也不触发训练；JSONL 是标注源数据，68 条源样本对应 68 行导出，不重复计入语料数量。导出顺序为 `asset_account_create`、`asset_account_query`、`asset_account_update`、`asset_account_delete`、`bill`、`reminder`、`todo`；脚本仍兼容旧输入中的 `accounting` 和 `asset_account` 标签，但当前源数据不再生成它们。格式、输出示例和校验规则见 [`data/annotations/README.md`](data/annotations/README.md)。
+导出只使用 Python 标准库，不加载 fastText，也不触发训练；JSONL 是标注源数据，81 条源样本对应 81 行导出，不重复计入语料数量。导出顺序为 `asset_account_create`、`asset_account_query`、`asset_account_update`、`asset_account_delete`、`bill`、`reminder`、`todo`；脚本仍兼容旧输入中的 `accounting` 和 `asset_account` 标签，但当前源数据不再生成它们。格式、输出示例和校验规则见 [`data/annotations/README.md`](data/annotations/README.md)。
 
 另外带一份**独立留出测试集** `data/probe/`（当前 **1032 条** = asset_account 248 / bill 172 / unknown 376 / reminder 108 / todo 84 / 混合多标签 44；账户文件内为 create 57 / query 69 / update 83 / delete 45）。它为 `data/labeling/` 当前加载的每个 `.txt` 训练文件提供对应测试文件，刻意与训练集**零重叠**，用来量「换说法的泛化」：
 
@@ -233,7 +233,7 @@ python3 scripts/fasttext_training_script.py -i /path/to/full.txt --split-by-labe
 unknown 983），端侧模型已用当时数据重训，在 499 条独立留出集上 **499/499**。下文保留
 v2、v3、v4 的历史结果，v4 指标见下文「v4（1842 条）历史实测」。
 
-> 以下二分类说明针对两个存量单标签文件及历史模型；默认目录现已另含 68 条多标签语料和提醒/待办类别。
+> 以下二分类说明针对两个存量单标签文件及历史模型；默认目录现已另含 81 条多标签语料和提醒/待办类别。
 > 旧口径将收支记录及资产账户查询/管理标为 `accounting`，其余标为 `unknown`；明确提醒和待办样本已迁移到对应类别。
 > 想换标签名（例如 `bookkeeping` / `other`）直接全量替换即可：
 >
@@ -628,7 +628,7 @@ python3 scripts/fasttext_training_script.py -m models/intent.bin -o models/inten
 结论与做法：
 
 * 初期参考规模：正样本 **100~200 条**，unknown 类 **300~500 条**（它要覆盖「其余全部」），
-  并留一份独立测试集（别用同一份数据既调参又报指标）。当前五个分类语料文件共 **3396 条**，
+  并留一份独立测试集（别用同一份数据既调参又报指标）。当前五个分类语料文件共 **3526 条**，
   并配了 **1032 条**独立留出集 `data/probe`。
 * 扩数据按**说法维度**补，不是按条数补：谁花的（我/孩子/公司）、金额写法（`30` / `30元` /
   `32.5` / `1,200` / `三百`）、动词（花/买/交/付/充/订/到账/支出）、口语 vs 书面、是否带时间词。
@@ -645,7 +645,7 @@ python3 scripts/fasttext_training_script.py -m models/intent.bin -o models/inten
   越明显，模型参数本身也不一致）。要完全可复现请用 `--thread 1`。
 * 历史二分类数据的正负样本约 1:1.13；当前已扩展为八个标签，不要只看整体准确率，使用 `--metrics` 查看每个标签的
   P/R/F1。
-* 指标波动大时优先补数据（每个标签几百条起步）；默认目录读取 3464 条，含 68 条多标签语料，
+* 指标波动大时优先补数据（每个标签几百条起步）；默认目录读取 3607 条，含 81 条多标签语料，
   请用 `-t` 独立留出集评估新数据的效果；旧版指标中的波动幅度仅供参考。
 
 ### 用留出集自评（推荐）
@@ -654,7 +654,7 @@ python3 scripts/fasttext_training_script.py -m models/intent.bin -o models/inten
 python3 scripts/fasttext_training_script.py -i data/labeling -t data/probe -o /tmp/m.bin --loss ova
 ```
 
-这条命令会用**全部 3464 条 `.txt` 数据**训练，在当前 **1032 条留出样本**上评估；提醒和待办语料已自动加载。
+这条命令会用**全部 3607 条 `.txt` 数据**训练，在当前 **1032 条留出样本**上评估；提醒和待办语料已自动加载。
 提醒和待办的留出样本已补齐，训练后应重点查看各标签的召回率及混合样本的多标签命中情况。
 v4 在原来 1842 条训练数据上的历史结果为 **499/499**，本轮新增数据尚未训练评估。
 `--report` 里也会把 `data.test` / `data.test_stats` 一起写进 JSON。
@@ -716,13 +716,13 @@ tests/test_asset_account_conversion.py  资产账户构造、内存增删改查�
 requirements.txt                   依赖
 README.md                          本文件
 data/needle/chinese_tool_cases.json  Needle 中文工具调用人工用例（27 条）
-data/labeling/asset_account_data.txt  示例数据-资产/负债账户增删改查类（四个 `__label__asset_account_*` 标签，611 条）
+data/labeling/asset_account_data.txt  示例数据-资产/负债账户增删改查类（四个 `__label__asset_account_*` 标签，667 条）
 data/labeling/bill_data.txt           示例数据-已发生账单记录类（`__label__bill` 751 条）
-data/labeling/unknown_data.txt     示例数据-未知类（`__label__unknown` 1120 条）
+data/labeling/unknown_data.txt     示例数据-未知类（`__label__unknown` 1190 条）
 data/labeling/reminder_data.txt    示例数据-提醒类（`__label__reminder` 476 条）
-data/labeling/todo_data.txt        示例数据-待办类（`__label__todo` 438 条）
-data/annotations/mixed_intents.jsonl  跨意图多操作标注源数据（68 条，本文件不直接传给训练脚本）
-data/labeling/mixed_intents_data.txt  上述 JSONL 的多标签导出（68 行，默认目录训练会加载）
+data/labeling/todo_data.txt        示例数据-待办类（`__label__todo` 442 条）
+data/annotations/mixed_intents.jsonl  跨意图多操作标注源数据（81 条，本文件不直接传给训练脚本）
+data/labeling/mixed_intents_data.txt  上述 JSONL 的多标签导出（81 行，默认目录训练会加载）
 data/probe/asset_account_data.txt  资产/负债账户独立留出测试集（248 条，与训练集零重叠）
 data/probe/bill_data.txt           已发生账单记录独立留出测试集（172 条，与训练集零重叠）
 data/probe/unknown_data.txt        独立留出测试集-未知类（376 条，与训练集零重叠）

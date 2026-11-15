@@ -66,3 +66,16 @@
 {"text":"新建一个账本中的中行储蓄卡账户；归档旧旅行卡账户；记录今天买书花了42元","intents":["asset_account_create","asset_account_delete","bill"],"routing_label":"asset_account_create"}
 {"text":"新建一个支付宝账户，记录今天早餐花了50元，明早提醒我核对余额","intents":["asset_account_create","bill","reminder"],"routing_label":"asset_account_create"}
 {"text":"把现金账户余额改成300元，记下午饭30元，再把检查账户加入待办","intents":["asset_account_update","bill","todo"],"routing_label":"asset_account_update"}
+{"text":"把现金账户余额调整为600元，周六提醒我核对一下，并把整理账户凭证加入待办","intents":["asset_account_update","reminder","todo"],"routing_label":"asset_account_update"}
+{"text":"将支付宝余额改成800元，周四提醒我确认余额，再把备份账本列入任务","intents":["asset_account_update","reminder","todo"],"routing_label":"asset_account_update"}
+{"text":"更新工行卡余额为4500元，晚上提醒我检查账本，把核对账户加入待办","intents":["asset_account_update","reminder","todo"],"routing_label":"asset_account_update"}
+{"text":"把现金账户余额改成700元，周日提醒我核对金额，再把备份账本列入待办","intents":["asset_account_update","reminder","todo"],"routing_label":"asset_account_update"}
+{"text":"将微信余额调整为900元，周五提醒我核对，再把整理账本加入任务","intents":["asset_account_update","reminder","todo"],"routing_label":"asset_account_update"}
+{"text":"更新支付宝余额为1200元，明晚提醒我确认，并把备份账户加入待办","intents":["asset_account_update","reminder","todo"],"routing_label":"asset_account_update"}
+{"text":"把银行卡余额改为3000元，周三提醒我核对金额，再把整理账本列入待办","intents":["asset_account_update","reminder","todo"],"routing_label":"asset_account_update"}
+{"text":"查一下支付宝账户余额，再把整理还款材料加入待办","intents":["asset_account_query","todo"],"routing_label":"asset_account_query"}
+{"text":"查询工行卡余额，把核对还款计划列入任务","intents":["asset_account_query","todo"],"routing_label":"asset_account_query"}
+{"text":"查一下信用卡可用额度，再把准备还款材料写进待办","intents":["asset_account_query","todo"],"routing_label":"asset_account_query"}
+{"text":"把支付宝余额改成900元，再设一条周三核对余额提醒","intents":["asset_account_update","reminder"],"routing_label":"asset_account_update"}
+{"text":"将现金账户余额调整为450元，再设一条月底核对提醒","intents":["asset_account_update","reminder"],"routing_label":"asset_account_update"}
+{"text":"更新微信零钱余额为260元，再设一条周五查账提醒","intents":["asset_account_update","reminder"],"routing_label":"asset_account_update"}

@@ -1,6 +1,6 @@
 # 跨意图多操作语料及导出
 
-[`mixed_intents.jsonl`](mixed_intents.jsonl) 保存一句话包含多个独立意图时的原始输入和完整标注。当前有 **68 条**人工样本：账单、资产账户增删改查、提醒、待办的组合均有覆盖，其中包含账单与资产账户同时出现的句子。
+[`mixed_intents.jsonl`](mixed_intents.jsonl) 保存一句话包含多个独立意图时的原始输入和完整标注。当前有 **81 条**人工样本：账单、资产账户增删改查、提醒、待办的组合均有覆盖，其中包含账单与资产账户同时出现的句子。
 
 JSONL 是标注源数据；默认导出到 [`../labeling/mixed_intents_data.txt`](../labeling/mixed_intents_data.txt)，随后使用 `-i data/labeling` 训练时会读取这份多标签文本。
 
@@ -50,4 +50,4 @@ __label__asset_account_create __label__reminder 在账本新建支付宝账户�
 __label__asset_account_create __label__asset_account_delete __label__bill 新建中行账户；归档旧旅行卡；记录买书42元
 ```
 
-导出前会校验字段、标签、重复文本、控制字符和 fastText 标签注入；全部记录成功后才原子替换输出文件。默认训练目录目前包含 68 行混合语料；JSONL 与导出文本不重复计数。
+导出前会校验字段、标签、重复文本、控制字符和 fastText 标签注入；全部记录成功后才原子替换输出文件。默认训练目录目前包含 81 行混合语料；JSONL 与导出文本不重复计数。
