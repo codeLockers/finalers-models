@@ -8,16 +8,16 @@
 
 | 文件 | 用途 | 规模 |
 | --- | --- | --- |
-| `labeling/*.txt` | 训练 + 调参（`-i data/labeling` 合并读取） | **3653 行**：`asset_account_data.txt` 698 / `bill_data.txt` 751 / `unknown_data.txt` 1205 / `reminder_data.txt` 476 / `todo_data.txt` 442 / `mixed_intents_data.txt` 81 |
+| `labeling/*.txt` | 训练 + 调参（`-i data/labeling` 合并读取） | **3690 行**：`asset_account_data.txt` 710 / `bill_data.txt` 751 / `unknown_data.txt` 1225 / `reminder_data.txt` 476 / `todo_data.txt` 447 / `mixed_intents_data.txt` 81 |
 | `probe/*.txt` | 独立留出测试集（`-t data/probe` 合并读取） | **1032 行**：`asset_account_data.txt` 248 / `bill_data.txt` 172 / `unknown_data.txt` 376 / `reminder_data.txt` 108 / `todo_data.txt` 84 / `mixed_intents_data.txt` 44 |
 
-`asset_account_data.txt` 的单标签样本按增删改查拆成四个标签：`asset_account_create`（创建账户、登记初始余额/额度/尾号/备注）153 条、`asset_account_query`（余额/额度/欠款/净资产/账户列表/账户详情查询）247 条、`asset_account_update`（修改余额、额度、名称、备注、类型、币种、默认标记、恢复启用）209 条、`asset_account_delete`（删除、移除、归档、隐藏）95 条；另有 6 条同时包含两个账户 CRUD 动作的多标签组合句。覆盖现金、微信、支付宝、银行卡、信用卡、花呗、贷款、医保、公积金、投资等账户。
+`asset_account_data.txt` 的单标签样本按增删改查拆成四个标签：`asset_account_create`（创建账户、登记初始余额/额度/尾号/备注）160 条、`asset_account_query`（余额/额度/欠款/净资产/账户列表/账户详情查询）252 条、`asset_account_update`（修改余额、额度、名称、备注、类型、币种、默认标记、恢复启用）209 条、`asset_account_delete`（删除、移除、归档、隐藏）95 条；另有 6 条同时包含两个账户 CRUD 动作的多标签组合句。覆盖现金、微信、支付宝、银行卡、信用卡、花呗、贷款、医保、公积金、投资等账户。
 
 `bill_data.txt` 的单标签样本覆盖早餐、餐饮、交通、购物、住房、水电、医疗、教育、宠物、娱乐、收入、退款、报销、还款和补记账单，支持中文数字、角/毛、小数、极简口语、多笔记录和不同时间表达。例：“今天吃早饭花了50元”。
 
 `unknown_data.txt` 仍保留收支统计、账单明细/支付状态查询、实际支付/转账/充值/还款动作、方法咨询、算数和其它未覆盖请求。咨询“如何创建资产账户”不等于立即执行账户创建；费用余额也不等于资产账户余额。
 
-当前目录读取 `*.txt`，五份分类语料和一份混合语料会自动加载，共八类标签：`asset_account_create`、`asset_account_query`、`asset_account_update`、`asset_account_delete`、`bill`、`unknown`、`reminder`、`todo`。分类语料行共 **3572**（其中账户文件含 6 条 CRUD 多标签组合），混合行 **81**；混合行中的标签计数为 `asset_account_create` 9、`asset_account_query` 9、`asset_account_update` 20、`asset_account_delete` 8、`bill` 20、`reminder` 63、`todo` 55。
+当前目录读取 `*.txt`，五份分类语料和一份混合语料会自动加载，共八类标签：`asset_account_create`、`asset_account_query`、`asset_account_update`、`asset_account_delete`、`bill`、`unknown`、`reminder`、`todo`。分类语料行共 **3609**（其中账户文件含 6 条 CRUD 多标签组合），混合行 **81**；混合行中的标签计数为 `asset_account_create` 9、`asset_account_query` 9、`asset_account_update` 20、`asset_account_delete` 8、`bill` 20、`reminder` 63、`todo` 55。
 
 `data/probe/` 与训练文本规范化后零重叠，共 **1032 行**；其中单标签 988 行，跨意图 44 行；账户留出集内为 create 57 / query 69 / update 83 / delete 45。新增数据后应先运行格式、重复和跨集合重叠检查，再进行训练或评估。
 
