@@ -20,8 +20,18 @@ from pathlib import Path
 
 DEFAULT_INPUT = "data/annotations/mixed_intents.jsonl"
 DEFAULT_OUTPUT = "data/labeling/mixed_intents_data.txt"
-# accounting remains accepted for backward-compatible imports; new source data uses asset_account/bill.
-INTENT_ORDER = ("asset_account", "bill", "accounting", "reminder", "todo")
+# 资产账户按增删改查拆成四个标签；accounting/asset_account 仅保留旧输入兼容。
+INTENT_ORDER = (
+    "asset_account_create",
+    "asset_account_query",
+    "asset_account_update",
+    "asset_account_delete",
+    "asset_account",
+    "bill",
+    "accounting",
+    "reminder",
+    "todo",
+)
 LABEL_PREFIX = "__label__"
 ALLOWED_FIELDS = {"text", "intents", "routing_label"}
 

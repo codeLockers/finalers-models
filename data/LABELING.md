@@ -1,6 +1,6 @@
 # 数据标注规范（data/）
 
-本目录将记账相关请求拆成两个独立类别：`asset_account` 负责记账本资产/负债账户的增删改查和管理，`bill` 负责记录已经发生的收入、支出和退款等账单。提醒、待办和跨意图语料继续单独标注。
+本目录将记账相关请求拆成多个独立类别：`asset_account_create`、`asset_account_query`、`asset_account_update`、`asset_account_delete` 按增删改查负责记账本资产/负债账户的创建、查询、更新和删除管理，`bill` 负责记录已经发生的收入、支出和退款等账单。提醒、待办和跨意图语料继续单独标注。
 
 本文命令均从项目根目录执行；显式传入的相对路径按当前工作目录解析。
 
@@ -8,40 +8,40 @@
 
 | 文件 | 用途 | 规模 |
 | --- | --- | --- |
-| `labeling/*.txt` | 训练 + 调参（`-i data/labeling` 合并读取） | **3158 行**：`asset_account_data.txt` 305 / `bill_data.txt` 751 / `unknown_data.txt` 1120 / `reminder_data.txt` 476 / `todo_data.txt` 438 / `mixed_intents_data.txt` 68 |
-| `probe/*.txt` | 独立留出测试集（`-t data/probe` 合并读取） | **940 行**：`asset_account_data.txt` 156 / `bill_data.txt` 172 / `unknown_data.txt` 376 / `reminder_data.txt` 108 / `todo_data.txt` 84 / `mixed_intents_data.txt` 44 |
+| `labeling/*.txt` | 训练 + 调参（`-i data/labeling` 合并读取） | **3464 行**：`asset_account_data.txt` 611 / `bill_data.txt` 751 / `unknown_data.txt` 1120 / `reminder_data.txt` 476 / `todo_data.txt` 438 / `mixed_intents_data.txt` 68 |
+| `probe/*.txt` | 独立留出测试集（`-t data/probe` 合并读取） | **1032 行**：`asset_account_data.txt` 248 / `bill_data.txt` 172 / `unknown_data.txt` 376 / `reminder_data.txt` 108 / `todo_data.txt` 84 / `mixed_intents_data.txt` 44 |
 
-`asset_account_data.txt` 的单标签样本覆盖账户余额/额度/欠款查询，账户创建、删除、更新余额、改名、备注、类型、默认标记、尾号、归档、恢复和账户列表查询；覆盖现金、微信、支付宝、银行卡、信用卡、花呗、贷款、医保、公积金、投资等账户。
+`asset_account_data.txt` 的单标签样本按增删改查拆成四个标签：`asset_account_create`（创建账户、登记初始余额/额度/尾号/备注）125 条、`asset_account_query`（余额/额度/欠款/净资产/账户列表/账户详情查询）218 条、`asset_account_update`（修改余额、额度、名称、备注、类型、币种、默认标记、恢复启用）184 条、`asset_account_delete`（删除、移除、归档、隐藏）90 条；另有 6 条同时包含两个账户 CRUD 动作的多标签组合句。覆盖现金、微信、支付宝、银行卡、信用卡、花呗、贷款、医保、公积金、投资等账户。
 
 `bill_data.txt` 的单标签样本覆盖早餐、餐饮、交通、购物、住房、水电、医疗、教育、宠物、娱乐、收入、退款、报销、还款和补记账单，支持中文数字、角/毛、小数、极简口语、多笔记录和不同时间表达。例：“今天吃早饭花了50元”。
 
 `unknown_data.txt` 仍保留收支统计、账单明细/支付状态查询、实际支付/转账/充值/还款动作、方法咨询、算数和其它未覆盖请求。咨询“如何创建资产账户”不等于立即执行账户创建；费用余额也不等于资产账户余额。
 
-当前目录读取 `*.txt`，五份单标签语料和一份混合语料会自动加载，共五类标签：`asset_account`、`bill`、`unknown`、`reminder`、`todo`。单标签行共 **3090**，混合行 **68**；混合行中的标签计数为 `asset_account` 32、`bill` 20、`reminder` 53、`todo` 45。
+当前目录读取 `*.txt`，五份分类语料和一份混合语料会自动加载，共八类标签：`asset_account_create`、`asset_account_query`、`asset_account_update`、`asset_account_delete`、`bill`、`unknown`、`reminder`、`todo`。分类语料行共 **3396**（其中账户文件含 6 条 CRUD 多标签组合），混合行 **68**；混合行中的标签计数为 `asset_account_create` 9、`asset_account_query` 6、`asset_account_update` 10、`asset_account_delete` 8、`bill` 20、`reminder` 53、`todo` 45。
 
-`data/probe/` 与训练文本规范化后零重叠，共 **940 行**；其中单标签 896 行，跨意图 44 行。新增数据后应先运行格式、重复和跨集合重叠检查，再进行训练或评估。
+`data/probe/` 与训练文本规范化后零重叠，共 **1032 行**；其中单标签 988 行，跨意图 44 行；账户留出集内为 create 57 / query 69 / update 83 / delete 45。新增数据后应先运行格式、重复和跨集合重叠检查，再进行训练或评估。
 
-跨意图标注源数据位于 [`annotations/mixed_intents.jsonl`](annotations/mixed_intents.jsonl)，共 **68 条**；运行 `make export-mixed-intents` 默认导出到 [`labeling/mixed_intents_data.txt`](labeling/mixed_intents_data.txt)。导出脚本按 `asset_account`、`bill`、`reminder`、`todo` 的固定顺序写出全部标签。
+跨意图标注源数据位于 [`annotations/mixed_intents.jsonl`](annotations/mixed_intents.jsonl)，共 **68 条**；运行 `make export-mixed-intents` 默认导出到 [`labeling/mixed_intents_data.txt`](labeling/mixed_intents_data.txt)。导出脚本按 `asset_account_create`、`asset_account_query`、`asset_account_update`、`asset_account_delete`、`bill`、`reminder`、`todo` 的固定顺序写出全部标签。
 
-### 当前五类标注边界
+### 当前八类标注边界
 
 按用户实际请求标注，不能只根据句中出现的关键词判断类别：
 
 | 边界 | 标签示例 | 对照表达 |
 | --- | --- | --- |
 | 已发生收支记录 | “今天吃早饭花了50元”“工资到账8000元”“补记昨天停车费20元” → `bill` | “这个月餐饮花了多少”“账单明细在哪里” → `unknown` |
-| 账本账户管理 | “创建一个支付宝账户”“查询微信余额”“把工行卡余额改成5000元”“删除重复现金账户” → `asset_account` | “记账软件里怎么创建资产账户”“到银行开新账户” → `unknown` |
-| 账本余额与实际支付 | “把账本现金账户余额校准为300元” → `asset_account` | “帮我给现金账户转300元”“帮我充值公交卡” → `unknown` |
-| 账户操作与账单同时出现 | “新建现金账户，同时记录晚饭支出” → `asset_account` + `bill` | 只把“创建现金账户”列入待办 → `todo` |
+| 账本账户管理 | “创建一个支付宝账户” → `asset_account_create`；“查询微信余额” → `asset_account_query`；“把工行卡余额改成5000元” → `asset_account_update`；“删除重复现金账户” → `asset_account_delete` | “记账软件里怎么创建资产账户”“到银行开新账户” → `unknown` |
+| 账本余额与实际支付 | “把账本现金账户余额校准为300元” → `asset_account_update` | “帮我给现金账户转300元”“帮我充值公交卡” → `unknown` |
+| 账户操作与账单同时出现 | “新建现金账户，同时记录晚饭支出” → `asset_account_create` + `bill` | 只把“创建现金账户”列入待办 → `todo` |
 | 提醒/待办 | “明早提醒我查余额” → `reminder`；“把查余额加入待办” → `todo` | 普通日程陈述或方法咨询 → `unknown` |
 | 待办与否定提醒 | “把预约复查和领药加入清单，先不设提醒” → `todo` | “取消已经设置的复诊提醒”或“不要建待办，只设提醒” → `reminder` |
 
-单标签文件只放一个类别；一句话有多个独立请求时保留在 `mixed_intents_data.txt`，并在 JSONL 源文件中写全标签。账户管理和已发生收支的边界分别以 `asset_account` 与 `bill` 为准，旧的宽泛 `accounting` 标签已从训练和 probe 文件中移除。
+单标签文件只放一个类别；一句话有多个独立请求时保留在 `mixed_intents_data.txt`，并在 JSONL 源文件中写全标签。账户管理和已发生收支的边界分别以四个 `asset_account_*` 标签与 `bill` 为准，旧的宽泛 `accounting` 和笼统 `asset_account` 标签已从训练和 probe 文件中移除。归档、隐藏、删除归 `asset_account_delete`；恢复、重新启用、取消归档归 `asset_account_update`。
 
 ## 2. 历史二分类语料的判定规则
 
 
-**本节记录旧版 `accounting` / `unknown` 二分类口径，不用于当前五类训练标注。**
+**本节记录旧版 `accounting` / `unknown` 二分类口径，不用于当前八类训练标注。**
 其中将提醒、待办或闹钟归为 `unknown` 的规则已经停用；当前明确提醒请求标 `reminder`，明确待办管理请求标 `todo`，以 §1 的当前边界为准。
 
 一句话定义：**句子的主要意图是不是「记录/陈述已发生的收支，或查询/管理记账中的资产与负债账户」**。

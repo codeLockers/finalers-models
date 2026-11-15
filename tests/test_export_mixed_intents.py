@@ -85,6 +85,41 @@ class ExportMixedIntentsTests(unittest.TestCase):
         )
         self.assertEqual(self.source.read_bytes(), original)
 
+    def test_orders_asset_account_crud_labels_canonically(self):
+        records = [
+            {
+                "text": "新建支付宝账户，再记录午饭30元，明早提醒我开会",
+                "intents": ["reminder", "asset_account_create", "bill"],
+                "routing_label": "asset_account_create",
+            },
+            {
+                "text": "查询微信余额，再删除重复现金账户",
+                "intents": ["asset_account_delete", "asset_account_query"],
+                "routing_label": "asset_account_query",
+            },
+            {
+                "text": "把工行卡余额改成5000元，再新建一个现金账户",
+                "intents": ["asset_account_update", "asset_account_create"],
+                "routing_label": "asset_account_update",
+            },
+        ]
+        self.write_records(records)
+
+        result = self.export()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            self.output.read_text(encoding="utf-8").splitlines(),
+            [
+                "__label__asset_account_create __label__bill __label__reminder "
+                + records[0]["text"],
+                "__label__asset_account_query __label__asset_account_delete "
+                + records[1]["text"],
+                "__label__asset_account_create __label__asset_account_update "
+                + records[2]["text"],
+            ],
+        )
+
     def test_accepts_null_or_absent_routing_label_without_dropping_intents(self):
         self.write_records([
             {
